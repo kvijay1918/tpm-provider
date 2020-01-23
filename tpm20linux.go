@@ -23,6 +23,10 @@ type linuxTpmFactory struct {
 	TpmFactory
 }
 
+const (
+	TPM_SECRET_KEY_LENGTH = 40
+)
+
 func (linuxImpl linuxTpmFactory) NewTpmProvider() (TpmProvider, error) {
 	var ctx *C.tpmCtx
 	ctx = C.TpmCreate()
@@ -183,7 +187,7 @@ func (t *tpm20Linux) IsOwnedWithAuth(tpmOwnerSecretKey string) (bool, error) {
 	} else if rc == -1 {
 		// Attempt 1 failed Failed
 		// attempt 2 - old osk = NEWKEY | new osk - RANDOM_KEY
-		randomSecretBytes := make([]byte, 20)
+		randomSecretBytes := make([]byte, TPM_SECRET_KEY_LENGTH)
 		randomSecretIntBytes, _ := rand.Read(randomSecretBytes)
 		randomSecretKey := string(randomSecretIntBytes)
 
