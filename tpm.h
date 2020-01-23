@@ -101,9 +101,11 @@ int TakeOwnership(const tpmCtx* ctx,
                   const char* ownerSecretKey, 
                   size_t ownerSecretKeyLength);
 
-int IsOwnedWithAuth(const tpmCtx* ctx, 
-                    const char* ownerSecretKey, 
-                    size_t ownerSecretKeyLength);
+int IsOwnedWithAuth(const tpmCtx *ctx,
+                    const char *oldOwnerSecretKey,
+                    size_t oldKeyLength,
+                    const char *newOwnerSecretKey,
+                    size_t newKeyLength);
 
 int CreateAik(const tpmCtx* ctx, 
               const char* ownerSecretKey, 

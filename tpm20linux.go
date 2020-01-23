@@ -15,6 +15,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/rand"
 	"unsafe"
 )
 
@@ -164,19 +165,50 @@ func (t *tpm20Linux) TakeOwnership(tpmOwnerSecretKey string) error {
 }
 
 func (t *tpm20Linux) IsOwnedWithAuth(tpmOwnerSecretKey string) (bool, error) {
-
-	cTpmOwnerSecretKey := C.CString(tpmOwnerSecretKey)
-	defer C.free(unsafe.Pointer(cTpmOwnerSecretKey))
-
+	var newSecretKey = ""
+	fmt.Println("Debug 1")
 	// IsOwnedWithAuth returns 0 (true) if 'owned', -1 if 'not owned', all other values are errors
-	rc := C.IsOwnedWithAuth(t.tpmCtx, cTpmOwnerSecretKey, C.size_t(len(tpmOwnerSecretKey)))
+
+	// attempt 1 - old osk = 0 | new osk - NEWKEY
+	// convert go-string to C-string
+	cTpmNewOwnerSecretKey := C.CString(tpmOwnerSecretKey)
+	cTpmOldOwnerSecretKey := C.CString(newSecretKey)
+	defer C.free(unsafe.Pointer(cTpmOldOwnerSecretKey))
+	defer C.free(unsafe.Pointer(cTpmNewOwnerSecretKey))
+	rc := C.IsOwnedWithAuth(t.tpmCtx, cTpmOldOwnerSecretKey, C.size_t(len(newSecretKey)), cTpmNewOwnerSecretKey, C.size_t(len(tpmOwnerSecretKey)))
 
 	if rc == 0 {
+		// The TPM was not owned viz. it had been cleared. Ownership taken with the provided secret.
 		return true, nil
 	} else if rc == -1 {
-		return false, nil
-	}
+		// Attempt 1 failed Failed
+		// attempt 2 - old osk = NEWKEY | new osk - RANDOM_KEY
+		randomSecretKey := make([]byte, 20)
+		rand.Read(randomSecretKey)
 
+		cTpmOldOwnerSecretKey = C.CString(tpmOwnerSecretKey)
+		cTpmNewOwnerSecretKey = C.CString(randomSecretKey)
+		rc := C.IsOwnedWithAuth(t.tpmCtx, cTpmOldOwnerSecretKey, C.size_t(len(tpmOwnerSecretKey)), cTpmNewOwnerSecretKey, C.size_t(len(randomSecretKey)))
+		// The TPM ownership is taken with the random secret
+		if rc == 0 {
+			// now we can switch the keys around to restore ownership to the user's key
+			// attempt 3 - old osk = RANDOM_KEY | new osk - NEW_KEY
+			//C.free(unsafe.Pointer(cTpmOldOwnerSecretKey))
+			//C.free(unsafe.Pointer(cTpmNewOwnerSecretKey))
+			cTpmOldOwnerSecretKey = C.CString(randomSecretKey)
+			cTpmNewOwnerSecretKey = C.CString(tpmOwnerSecretKey)
+			rc := C.IsOwnedWithAuth(t.tpmCtx, cTpmOldOwnerSecretKey, C.size_t(len(randomSecretKey)), cTpmNewOwnerSecretKey, C.size_t(len(tpmOwnerSecretKey)))
+			if rc == 0 {
+				// The TPM ownership has been set with the provided owner secret
+				return true, nil
+			} else if rc == -1 {
+				// The TPM ownership cannot be set with the provided owner secret
+				return false, fmt.Errorf("IsOwnedWithAuth returned error code 0x%X", rc)
+			}
+		} else if rc == -1 {
+			return false, fmt.Errorf("IsOwnedWithAuth returned error code 0x%X", rc)
+		}
+	}
 	return false, fmt.Errorf("IsOwnedWithAuth returned error code 0x%X", rc)
 }
 
