@@ -13,6 +13,7 @@ import "C"
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -24,7 +25,7 @@ type linuxTpmFactory struct {
 }
 
 const (
-	TPM_SECRET_KEY_LENGTH = 40
+	TPM_SECRET_KEY_LENGTH = 20
 )
 
 func (linuxImpl linuxTpmFactory) NewTpmProvider() (TpmProvider, error) {
@@ -188,8 +189,8 @@ func (t *tpm20Linux) IsOwnedWithAuth(tpmOwnerSecretKey string) (bool, error) {
 		// Attempt 1 failed Failed
 		// attempt 2 - old osk = NEWKEY | new osk - RANDOM_KEY
 		randomSecretBytes := make([]byte, TPM_SECRET_KEY_LENGTH)
-		randomSecretIntBytes, _ := rand.Read(randomSecretBytes)
-		randomSecretKey := string(randomSecretIntBytes)
+		rand.Read(randomSecretBytes)
+		randomSecretKey := hex.EncodeToString(randomSecretBytes)
 
 		cTpmOldOwnerSecretKey = C.CString(tpmOwnerSecretKey)
 		cTpmNewOwnerSecretKey = C.CString(randomSecretKey)
