@@ -83,13 +83,13 @@ int Sign(const tpmCtx* ctx,
     scheme.details.rsassa.hashAlg = TPM2_ALG_SHA256;
 
     hash.size = TPM2_SHA256_DIGEST_SIZE;
-    memcpy(hash.buffer, hashBytes, hashBytesLength);
+    memcpy_s(hash.buffer, hashBytesLength, hashBytes, hashBytesLength);
 
     // key password
     authCommand.count = 1;
     authCommand.auths[0].sessionHandle = TPM2_RS_PW;
     authCommand.auths[0].hmac.size = keySecretLength;
-    memcpy(&authCommand.auths[0].hmac.buffer, keySecret, keySecretLength);
+    memcpy_s(&authCommand.auths[0].hmac.buffer, keySecretLength, keySecret, keySecretLength);
 
     rval = Tss2_Sys_Sign(ctx->sys, 
                             signingKeyHandle, 
@@ -119,7 +119,7 @@ int Sign(const tpmCtx* ctx,
         return -1;
     }
 
-    memcpy(*signatureBytes, signature.signature.rsassa.sig.buffer, signature.signature.rsassa.sig.size);
+    memcpy_s(*signatureBytes, signature.signature.rsassa.sig.size, signature.signature.rsassa.sig.buffer, signature.signature.rsassa.sig.size);
     *signatureBytesLength = signature.signature.rsassa.sig.size;
     
     return TSS2_RC_SUCCESS;

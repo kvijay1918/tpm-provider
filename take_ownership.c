@@ -16,7 +16,7 @@ static int change_auth(TSS2_SYS_CONTEXT* sys,
 
     sessionsData.count = 1;
     sessionsData.auths[0].sessionHandle = TPM2_RS_PW;
-    memcpy(&sessionsData.auths[0].hmac, oldSecretKey, sizeof(TPM2B_AUTH));
+    memcpy_s(&sessionsData.auths[0].hmac, sizeof(TPM2B_AUTH), oldSecretKey, sizeof(TPM2B_AUTH));
     sessionsData.auths[0].sessionAttributes = 0;
 
     rval = Tss2_Sys_HierarchyChangeAuth(sys, auth_handle, &sessionsData, newSecretKey, 0);

@@ -44,9 +44,9 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
     
     inSensitive.sensitive.data.size = 0;
     inSensitive.size = inSensitive.sensitive.userAuth.size + 2;
-    memcpy(&inSensitive.sensitive.userAuth, aikSecretKey, sizeof(TPM2B_AUTH));
+    memcpy_s(&inSensitive.sensitive.userAuth, sizeof(TPM2B_AUTH), aikSecretKey, sizeof(TPM2B_AUTH));
 
-    memcpy(&sessions_data.auths[0].hmac, secretKey, sizeof(TPM2B_AUTH));
+    memcpy_s(&sessions_data.auths[0].hmac, sizeof(TPM2B_AUTH), secretKey, sizeof(TPM2B_AUTH));
 
     {   // from set_key_algorithm
         inPublic.publicArea.nameAlg = TPM2_ALG_SHA256;
@@ -122,7 +122,7 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
     sessions_data.auths[0].sessionHandle = TPM2_RS_PW;
     sessions_data.auths[0].sessionAttributes &= ~TPMA_SESSION_CONTINUESESSION;
     sessions_data.auths[0].hmac.size = 0;
-    memcpy(&sessions_data.auths[0].hmac, secretKey, sizeof(TPM2B_AUTH));
+    memcpy_s(&sessions_data.auths[0].hmac, sizeof(TPM2B_AUTH), secretKey, sizeof(TPM2B_AUTH));
 
     // start a second session
     rval = Tss2_Sys_StartAuthSession(sys, tpmKey, bind, 0, &nonceCaller, &encryptedSalt, TPM2_SE_POLICY, &symmetric, TPM2_ALG_SHA256, &sessionHandle, &nonceNewer, 0);
@@ -163,7 +163,7 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
     sessions_data.auths[0].hmac.size = 0;
 
     // we use same password for endors/owner (shouldne be needed)
-    memcpy(&sessions_data.auths[0].hmac, secretKey, sizeof(TPM2B_AUTH));
+    memcpy_s(&sessions_data.auths[0].hmac, sizeof(TPM2B_AUTH), secretKey, sizeof(TPM2B_AUTH));
 
     rval = Tss2_Sys_EvictControl(sys, TPM2_RH_OWNER, loaded_sha1_key_handle, &sessions_data, TPM_HANDLE_AIK, &sessions_data_out);
     if (rval != TPM2_RC_SUCCESS) 
@@ -209,7 +209,7 @@ static int getpubek(TSS2_SYS_CONTEXT *sys,
         .sessionAttributes = 0,
     }}};
 
-    memcpy(&sessionsData.auths[0].hmac, secretKey, sizeof(TPM2B_AUTH));
+    memcpy_s(&sessionsData.auths[0].hmac, sizeof(TPM2B_AUTH), secretKey, sizeof(TPM2B_AUTH));
 
     inSensitive.sensitive.data.size = 0;
     inSensitive.size = inSensitive.sensitive.userAuth.size + 2;
@@ -236,7 +236,7 @@ static int getpubek(TSS2_SYS_CONTEXT *sys,
         inPublic.publicArea.objectAttributes |= TPMA_OBJECT_FIXEDPARENT;
         inPublic.publicArea.objectAttributes |= TPMA_OBJECT_SENSITIVEDATAORIGIN;
         inPublic.publicArea.authPolicy.size = 32;
-        memcpy(inPublic.publicArea.authPolicy.buffer, auth_policy, 32);
+        memcpy_s(inPublic.publicArea.authPolicy.buffer, 32, auth_policy, 32);
 
         inPublic.publicArea.type = TPM2_ALG_RSA; // 0x1 from command line
 
@@ -265,7 +265,7 @@ static int getpubek(TSS2_SYS_CONTEXT *sys,
 
     DEBUG("EK create success. Got handle: 0x%8.8x", handle2048ek);
 
-    memcpy(&sessionsData.auths[0].hmac, secretKey, sizeof(TPM2B_AUTH));
+    memcpy_s(&sessionsData.auths[0].hmac, sizeof(TPM2B_AUTH), secretKey, sizeof(TPM2B_AUTH));
 
     rval = Tss2_Sys_EvictControl(sys, TPM2_RH_OWNER, handle2048ek, &sessionsData, TPM_HANDLE_EK_CERT, &sessionsDataOut);
     if (rval != TPM2_RC_SUCCESS) 
@@ -397,7 +397,7 @@ int GetAikName(const tpmCtx* ctx,
         return -1;
     }
 
-    memcpy(*aikName, name.name, name.size);
+    memcpy_s(*aikName, name.size, name.name, name.size);
     *aikNameLength = name.size;
     
     return 0;
@@ -434,7 +434,7 @@ int GetAikBytes(const tpmCtx* ctx,
         return -1;
     }
 
-    memcpy(*aikBytes, aikPublic.publicArea.unique.rsa.buffer, aikPublic.publicArea.unique.rsa.size);
+    memcpy_s(*aikBytes, aikPublic.publicArea.unique.rsa.size, aikPublic.publicArea.unique.rsa.buffer, aikPublic.publicArea.unique.rsa.size);
     *aikBytesLength = aikPublic.publicArea.unique.rsa.size;
     
     return 0;

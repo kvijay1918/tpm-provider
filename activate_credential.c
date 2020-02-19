@@ -34,7 +34,7 @@ int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys,
     memcpy_s(&cmd_auth_array_password.auths[0],  sizeof(TPMS_AUTH_COMMAND), aikPassword, sizeof(TPMS_AUTH_COMMAND));
 
     cmd_auth_array_endorse.count = 1;
-    memcpy(&cmd_auth_array_endorse.auths[0], endorsePassword, sizeof(TPMS_AUTH_COMMAND));
+    memcpy_s(&cmd_auth_array_endorse.auths[0], sizeof(TPMS_AUTH_COMMAND), endorsePassword, sizeof(TPMS_AUTH_COMMAND));
 
     rval = Tss2_Sys_StartAuthSession(sys, tpmKey, bind, 0, &nonceCaller, &encryptedSalt, TPM2_SE_POLICY, &symmetric, TPM2_ALG_SHA256, &sessionHandle, &nonceNewer, 0);
     if( rval != TPM2_RC_SUCCESS )
@@ -111,7 +111,7 @@ int ActivateCredential(const tpmCtx* ctx,
     }
 
     credentialBlob.size = credentialBytesLength;
-    memcpy(credentialBlob.credential, credentialBytes, credentialBytesLength);
+    memcpy_s(credentialBlob.credential, credentialBytesLength, credentialBytes, credentialBytesLength);
 
     //
     // copy secretBytes into the TPM2B_ENCRYPTED_SECRET
@@ -123,7 +123,7 @@ int ActivateCredential(const tpmCtx* ctx,
     }
 
     secret.size = secretBytesLength;
-    memcpy(secret.secret, secretBytes, secretBytesLength);
+    memcpy_s(secret.secret, secretBytesLength, secretBytes, secretBytesLength);
 
     //
     // Now call activate credential
@@ -148,7 +148,7 @@ int ActivateCredential(const tpmCtx* ctx,
         return -1;
     }
 
-    memcpy(*decrypted, certInfoData.buffer, certInfoData.size);
+    memcpy_s(*decrypted, certInfoData.size, certInfoData.buffer, certInfoData.size);
     *decryptedLength = certInfoData.size;
 
     return 0;

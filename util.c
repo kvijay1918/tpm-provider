@@ -76,7 +76,7 @@ int InitializeTpmAuth(TPM2B_AUTH* auth, const char* secretKey, size_t secretKeyL
         return -1;
     }
 
-    memcpy(auth->buffer, secretKey, secretKeyLength);
+    memcpy_s(auth->buffer, secretKeyLength, secretKey, secretKeyLength);
     auth->size = secretKeyLength;
 
     return 0;
@@ -138,7 +138,7 @@ int ReadPublic(const tpmCtx* ctx,
         return -1;
     }
 
-    memcpy(*public, inPublic.publicArea.unique.rsa.buffer, inPublic.publicArea.unique.rsa.size);
+    memcpy_s(*public, inPublic.publicArea.unique.rsa.size, inPublic.publicArea.unique.rsa.buffer, inPublic.publicArea.unique.rsa.size);
     *publicLength = inPublic.publicArea.unique.rsa.size;
 
     return 0;
@@ -160,7 +160,7 @@ int ClearKeyHandle(TSS2_SYS_CONTEXT *sys, TPM2B_AUTH *ownerAuth, TPM_HANDLE keyH
                                                    .sessionAttributes = 0,
                                                }}};
 
-    memcpy(&sessions_data.auths[0].hmac, ownerAuth, sizeof(TPM2B_AUTH));
+    memcpy_s(&sessions_data.auths[0].hmac, sizeof(TPM2B_AUTH), ownerAuth, sizeof(TPM2B_AUTH));
 
     TSS2L_SYS_AUTH_RESPONSE sessions_data_out;
 

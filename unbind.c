@@ -125,12 +125,12 @@ int Unbind(const tpmCtx* ctx,
     authSession.count = 1;
     authSession.auths[0].sessionHandle = TPM2_RS_PW;
     authSession.auths[0].hmac.size = keySecretLength;
-    memcpy(&authSession.auths[0].hmac.buffer, keySecret, keySecretLength);
+    memcpy_s(&authSession.auths[0].hmac.buffer, keySecretLength, keySecret, keySecretLength);
 
     // encrypted data
     DEBUG("==> encryptedBytesLength: %x", encryptedBytesLength);
     cipherText.size = encryptedBytesLength;
-    memcpy(cipherText.buffer, encryptedBytes, encryptedBytesLength);
+    memcpy_s(cipherText.buffer, encryptedBytesLength, encryptedBytes, encryptedBytesLength);
 
     scheme.scheme = TPM2_ALG_OAEP; // TPM2_ALG_RSASSA;
     scheme.details.oaep.hashAlg = TPM2_ALG_SHA256;
@@ -165,7 +165,7 @@ int Unbind(const tpmCtx* ctx,
         return -1;
     }
 
-    memcpy(*decryptedData, message.buffer, message.size);
+    memcpy_s(*decryptedData, message.size, message.buffer, message.size);
     *decryptedDataLength = message.size;
     
     return TSS2_RC_SUCCESS;

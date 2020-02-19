@@ -48,7 +48,7 @@ static int getPcrs(TSS2_SYS_CONTEXT* sys,
     size_t              count = 0;
 
     //1. prepare pcrSelectionIn with g_pcrSelections
-    memcpy(&pcr_selection_tmp, requestedPcrs, sizeof(pcr_selection_tmp));
+    memcpy_s(&pcr_selection_tmp, sizeof(pcr_selection_tmp), requestedPcrs, sizeof(pcr_selection_tmp));
 
     do 
     {
@@ -91,7 +91,7 @@ static int getQuote(TSS2_SYS_CONTEXT* sys,
 
     // neded for tpm2-tss-2.0.0-4.el8.x86_64 (rhel8)
     // not needed tpm2-tss-2.1.2-1.fc29.x86_64 (fedora 29)
-    memcpy(&sessionsData.auths[0].hmac, akPassword, sizeof(TPM2B_AUTH));
+    memcpy_s(&sessionsData.auths[0].hmac, sizeof(TPM2B_AUTH), akPassword, sizeof(TPM2B_AUTH));
 
     memset( (void *)signature, 0, sizeof(TPMT_SIGNATURE) );
 
@@ -174,7 +174,7 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
 
         // pcr selection is a 4 byte bit map 
         pcrSelectBitMask = 0;
-        memcpy(&pcrSelectBitMask, pcrSelection->pcrSelections[i].pcrSelect, pcrSelection->pcrSelections[i].sizeofSelect);
+        memcpy_s(&pcrSelectBitMask, pcrSelection->pcrSelections[i].sizeofSelect, pcrSelection->pcrSelections[i].pcrSelect, pcrSelection->pcrSelections[i].sizeofSelect);
 
         for(int j = 0; j < 32; j++)
         {
@@ -200,28 +200,28 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
     //
     // first the quote information
     tmp = __builtin_bswap16(quote->size);
-    memcpy((*quoteBytes + off), &tmp, sizeof(uint16_t));
+    memcpy_s((*quoteBytes + off), sizeof(uint16_t), &tmp, sizeof(uint16_t));
     off += sizeof(uint16_t);
 
-    memcpy((*quoteBytes + off), &quote->attestationData, quote->size);
+    memcpy_s((*quoteBytes + off), quote->size, &quote->attestationData, quote->size);
     off += quote->size;
 
     //
     // now the signature
     //
     tmp = __builtin_bswap16(signature->sigAlg);  
-    memcpy((*quoteBytes + off), &tmp, sizeof(uint16_t));
+    memcpy_s((*quoteBytes + off), sizeof(uint16_t), &tmp, sizeof(uint16_t));
     off += sizeof(uint16_t);
 
     tmp = __builtin_bswap16(signature->signature.rsassa.hash);  
-    memcpy((*quoteBytes + off), &tmp, sizeof(uint16_t));
+    memcpy_s((*quoteBytes + off), sizeof(uint16_t), &tmp, sizeof(uint16_t));
     off += sizeof(uint16_t);
 
     tmp = __builtin_bswap16(signature->signature.rsassa.sig.size);
-    memcpy((*quoteBytes + off), &tmp, sizeof(uint16_t));
+    memcpy_s((*quoteBytes + off), sizeof(uint16_t), &tmp, sizeof(uint16_t));
     off += sizeof(uint16_t);
 
-    memcpy((*quoteBytes + off), &signature->signature.rsassa.sig.buffer, signature->signature.rsassa.sig.size);
+    memcpy_s((*quoteBytes + off), signature->signature.rsassa.sig.size, &signature->signature.rsassa.sig.buffer, signature->signature.rsassa.sig.size);
     off += signature->signature.rsassa.sig.size;
 
     //
@@ -239,7 +239,7 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
             else if(pcrMeasurements[i].digests[j].size > 0 && pcrMeasurements[i].digests[j].size <= 64)
             {
                 DEBUG("Copying measurement %d, digest %d, length %d at %x", i, j, pcrMeasurements[i].digests[j].size, off);
-                memcpy((*quoteBytes + off), pcrMeasurements[i].digests[j].buffer, pcrMeasurements[i].digests[j].size);
+                memcpy_s((*quoteBytes + off), pcrMeasurements[i].digests[j].size, pcrMeasurements[i].digests[j].buffer, pcrMeasurements[i].digests[j].size);
                 off += pcrMeasurements[i].digests[j].size;
             }
             else
@@ -296,7 +296,7 @@ int GetTpmQuote(const tpmCtx* ctx,
     }
 
     qualifyingData.size = qualifyingDataBytesLength;
-    memcpy(&qualifyingData.buffer, qualifyingDataBytes, qualifyingDataBytesLength);
+    memcpy_s(&qualifyingData.buffer, qualifyingDataBytesLength, qualifyingDataBytes, qualifyingDataBytesLength);
 
     //
     // get the quote and signature information.  check results

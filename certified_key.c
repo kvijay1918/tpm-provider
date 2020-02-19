@@ -68,7 +68,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
     sessionData.count = 1;
     sessionData.auths[0].sessionHandle = TPM2_RS_PW;
 
-    memcpy(&inSensitive.sensitive.userAuth.buffer, keySecret, keySecretLength);
+    memcpy_s(&inSensitive.sensitive.userAuth.buffer, keySecretLength, keySecret, keySecretLength);
     inSensitive.sensitive.userAuth.size = keySecretLength;
     inSensitive.size = inSensitive.sensitive.userAuth.size + 2;
 
@@ -140,11 +140,11 @@ int CreateCertifiedKey(const tpmCtx* ctx,
     authCommand.count = 2;
     authCommand.auths[0].sessionHandle = TPM2_RS_PW;
     authCommand.auths[0].hmac.size = keySecretLength;
-    memcpy(&authCommand.auths[0].hmac.buffer, keySecret, keySecretLength);
+    memcpy_s(&authCommand.auths[0].hmac.buffer, keySecretLength, keySecret, keySecretLength);
  
     authCommand.auths[1].sessionHandle = TPM2_RS_PW;
     authCommand.auths[1].hmac.size = aikSecretKeyLength;
-    memcpy(&authCommand.auths[1].hmac.buffer, aikSecretKey, aikSecretKeyLength);
+    memcpy_s(&authCommand.auths[1].hmac.buffer, aikSecretKeyLength, aikSecretKey, aikSecretKeyLength);
 
     inScheme.scheme = TPM2_ALG_RSASSA;
     inScheme.details.rsassa.hashAlg = TPM2_ALG_SHA256;
