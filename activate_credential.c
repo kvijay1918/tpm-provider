@@ -4,7 +4,6 @@
  */
 #include "tpm20linux.h"
 
-
 // Based on https://github.com/tpm2-software/tpm2-tools/blob/3.1.0/tools/tpm2_activatecredential.c
 int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys, 
                            TPMS_AUTH_COMMAND* endorsePassword, 
@@ -32,7 +31,7 @@ int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys,
     nonceCaller.size = TPM2_SHA1_DIGEST_SIZE;
 
     cmd_auth_array_password.count = 2;
-    memcpy(&cmd_auth_array_password.auths[0], aikPassword, sizeof(TPMS_AUTH_COMMAND));
+    memcpy_s(&cmd_auth_array_password.auths[0],  sizeof(TPMS_AUTH_COMMAND), aikPassword, sizeof(TPMS_AUTH_COMMAND));
 
     cmd_auth_array_endorse.count = 1;
     memcpy(&cmd_auth_array_endorse.auths[0], endorsePassword, sizeof(TPMS_AUTH_COMMAND));

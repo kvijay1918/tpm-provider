@@ -7,6 +7,7 @@
 
 #include <stdlib.h> // C.free
 #include <stdint.h> // size_t, etc.
+#include "SafeStringLibrary/include/safe_lib.h"
 
 typedef enum TPM_VERSION
 {

@@ -7,7 +7,8 @@
 
 package tpmprovider
 
-// #cgo LDFLAGS: -ltss2-sys -ltss2-tcti-tabrmd -ltss2-mu -lssl -lcrypto
+// #cgo CFLAGS: -DPNG_DEBUG=1
+// #cgo LDFLAGS: -ltss2-sys -ltss2-tcti-tabrmd -ltss2-mu -lssl -lcrypto -L${SRCDIR}/SafeStringLibrary -llibSafeStringRelease
 // #include "tpm.h"
 import "C"
 
