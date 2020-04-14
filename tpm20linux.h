@@ -15,6 +15,7 @@
 #include <string.h>
 #include <tss2/tss2_sys.h>
 #include <tss2/tss2-tcti-tabrmd.h>
+#include <tss2/tss2_tcti_device.h>
 
 #include "tpm.h"
 
