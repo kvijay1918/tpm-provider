@@ -10,7 +10,7 @@ package tpmprovider
 //// The following CFLAGS require 'export CGO_CFLAGS_ALLOW="-f.*"' in the executable that
 //// uses tpm-provider (i.e. go-trust-agent and workload-agent).
 // #cgo CFLAGS: -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv -fstack-protector-strong
-// #cgo LDFLAGS: -ltss2-sys -ltss2-tcti-tabrmd -ltss2-mu -lssl -lcrypto
+// #cgo LDFLAGS: -ltss2-sys -ltss2-tcti-tabrmd -ltss2-mu -lssl -lcrypto -ltss2-tcti-device
 // #include "tpm.h"
 import "C"
 
