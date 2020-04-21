@@ -31,6 +31,9 @@ const (
 
 	Binding = C.TPM_CERTIFIED_KEY_USAGE_BINDING
 	Signing = C.TPM_CERTIFIED_KEY_USAGE_SIGNING
+
+	TCTI_ABRMD = C.TCTI_ABRMD
+	TCTI_DEVICE = C.TCTI_DEVICE
 )
 
 type TpmProvider interface {

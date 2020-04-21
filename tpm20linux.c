@@ -4,13 +4,19 @@
  */
 #include "tpm20linux.h"
 
-tpmCtx* TpmCreate()
+tpmCtx* TpmCreate(uint tctiType)
 {
     tpmCtx* ctx = NULL;
     size_t size = 0;
     TSS2_RC rc = 0;
     TSS2_ABI_VERSION abiVersion = {0};
     char* conf = "/dev/tpm0";
+
+    if (tctiType != TCTI_ABRMD && tctiType != TCTI_DEVICE) 
+    {
+        ERROR("Incorrect tcti type: %d\n", tctiType);
+        return NULL;
+    }
 
     ctx = (tpmCtx*)calloc(1, sizeof(tpmCtx));
     if(ctx == NULL)
@@ -21,8 +27,15 @@ tpmCtx* TpmCreate()
 
     ctx->version = TPM_VERSION_20;
 
-//    rc = Tss2_Tcti_Tabrmd_Init(NULL, &size, NULL);
-    rc = Tss2_Tcti_Device_Init (NULL, &size, NULL);
+    if (tctiType == TCTI_DEVICE) 
+    {
+        rc = Tss2_Tcti_Device_Init (NULL, &size, NULL);
+    }
+    else 
+    {
+        rc = Tss2_Tcti_Tabrmd_Init(NULL, &size, NULL);
+    }
+    
     if (rc != TPM2_RC_SUCCESS) 
     {
         ERROR("Tss2_Tcti_Tabrmd_Init return %d\n", rc);
@@ -31,8 +44,16 @@ tpmCtx* TpmCreate()
     }
 
     ctx->tcti = (TSS2_TCTI_CONTEXT*)calloc(1, size);
-//    rc = Tss2_Tcti_Tabrmd_Init(ctx->tcti, &size, NULL);
-    rc = Tss2_Tcti_Device_Init(ctx->tcti, &size, conf);
+
+    if (tctiType == TCTI_DEVICE) 
+    {
+        rc = Tss2_Tcti_Device_Init(ctx->tcti, &size, conf);
+    }
+    else 
+    {
+        rc = Tss2_Tcti_Tabrmd_Init(ctx->tcti, &size, NULL);
+    }
+
     if (rc != TPM2_RC_SUCCESS) 
     {
         ERROR("Tss2_Tcti_Tabrmd_Init returned %d\n", rc);

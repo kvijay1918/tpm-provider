@@ -23,12 +23,19 @@ type TpmFactory interface {
 }
 
 //
-// Creates the default TpmFactory currently returns the linux TpmProviders on top of
-// Tss2.
+// Creates the default TpmFactory that currently uses TSS2 and 'abrmd'.
 //
 func NewTpmFactory() (TpmFactory, error) {
 	if runtime.GOOS == "linux" {
-		return linuxTpmFactory{}, nil
+		return linuxTpmFactory{tctiType : TCTI_ABRMD}, nil
+	} else {
+		return nil, errors.New("Unsuportted tpm factory platform " + runtime.GOOS)
+	}
+}
+
+func NewTpmDeviceFactory() (TpmFactory, error) {
+	if runtime.GOOS == "linux" {
+		return linuxTpmFactory{tctiType : TCTI_DEVICE}, nil
 	} else {
 		return nil, errors.New("Unsuportted tpm factory platform " + runtime.GOOS)
 	}

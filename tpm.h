@@ -15,6 +15,12 @@ typedef enum TPM_VERSION
     TPM_VERSION_20
 } TPM_VERSION;
 
+typedef enum TCTI_TYPE
+{
+    TCTI_ABRMD,
+    TCTI_DEVICE
+} TCTI_TYPE;
+
 typedef enum NV_IDX 
 {
     NV_IDX_ENDORSEMENT_KEY  = 0x1c00002,
@@ -59,7 +65,7 @@ typedef struct CertifiedKey {
 
 typedef struct tpmCtx tpmCtx;
 
-tpmCtx* TpmCreate();
+tpmCtx* TpmCreate(uint tctiType);
 
 void TpmDelete(tpmCtx* ctx);
 

@@ -24,6 +24,7 @@ import (
 
 type linuxTpmFactory struct {
 	TpmFactory
+	tctiType uint32
 }
 
 const (
@@ -33,7 +34,7 @@ const (
 
 func (linuxImpl linuxTpmFactory) NewTpmProvider() (TpmProvider, error) {
 	var ctx *C.tpmCtx
-	ctx = C.TpmCreate()
+	ctx = C.TpmCreate((C.uint)(linuxImpl.tctiType))
 
 	if ctx == nil {
 		return nil, errors.New("Could not create tpm context")
