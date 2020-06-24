@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "tpm20linux.h"
+#include "tpm20.h"
 
 #define NV_DEFAULT_BUFFER_SIZE 512
 
@@ -15,12 +15,12 @@ static int GetMaxNvBufferSize(TSS2_SYS_CONTEXT* sys, uint32_t* size)
 
     if(!sys)
     {
-        ERROR("TSS2_SYS_CONTEXT was not provided.");
+        LOG_ERROR("TSS2_SYS_CONTEXT was not provided.");
     }
 
     if(!size)
     {
-        ERROR("'size' was not provided.")
+        LOG_ERROR("'size' was not provided.")
     }
 
     *size = 0;
@@ -29,7 +29,7 @@ static int GetMaxNvBufferSize(TSS2_SYS_CONTEXT* sys, uint32_t* size)
     
     if (rval != TSS2_RC_SUCCESS) 
     {
-        ERROR("Failed to query max transmission size via Tss2_Sys_GetCapability. Error:0x%x", rval);
+        LOG_ERROR("Failed to query max transmission size via Tss2_Sys_GetCapability. Error:0x%x", rval);
     } 
     else
     {
@@ -85,7 +85,7 @@ int NvDefine(const tpmCtx* ctx,
     rval = Tss2_Sys_NV_DefineSpace(ctx->sys, TPM2_RH_OWNER, &sessionData, &nvOwnerAuth, &publicInfo, &sessionDataOut);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_NV_DefineSpace returned error: 0x%x", rval);
+        LOG_ERROR("Tss2_Sys_NV_DefineSpace returned error: 0x%x", rval);
         return rval;
     }
 
@@ -111,7 +111,7 @@ int NvRelease(const tpmCtx* ctx,
     rval = Tss2_Sys_NV_UndefineSpace(ctx->sys, TPM2_RH_OWNER, nvIndex, &sessionData, 0);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_NV_UndefineSpace returned error: 0x%x", rval);
+        LOG_ERROR("Tss2_Sys_NV_UndefineSpace returned error: 0x%x", rval);
         return rval;
     }
 
@@ -168,7 +168,7 @@ int NvRead(const tpmCtx* ctx,
     rval = GetMaxNvBufferSize(ctx->sys, &maxNvBufferSize);
     if (rval != TSS2_RC_SUCCESS) 
     {
-        ERROR("GetMaxNvBufferSize returned error: 0x%x", rval);
+        LOG_ERROR("GetMaxNvBufferSize returned error: 0x%x", rval);
         return rval;
     }
 
@@ -176,21 +176,21 @@ int NvRead(const tpmCtx* ctx,
     rval = Tss2_Sys_NV_ReadPublic(ctx->sys, nvIndex, NULL, &nvPublic, &name, NULL);
     if (rval != TSS2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_NV_ReadPublic returned: 0x%x", rval);
+        LOG_ERROR("Tss2_Sys_NV_ReadPublic returned: 0x%x", rval);
         return rval;
     }
 
     nvBufferSize = nvPublic.nvPublic.dataSize;
     if(nvBufferSize == 0 || nvBufferSize > TPM2_MAX_NV_BUFFER_SIZE)
     {
-        ERROR("Invalid nv buffer size 0x%x", nvBufferSize);
+        LOG_ERROR("Invalid nv buffer size 0x%x", nvBufferSize);
         return -1;
     }
 
     *nvBytes = (uint8_t*)calloc(nvBufferSize, 1);
     if(!*nvBytes)
     {
-        ERROR("Could not allocate nv buffer");
+        LOG_ERROR("Could not allocate nv buffer");
         return -1;
     }
 
@@ -205,14 +205,14 @@ int NvRead(const tpmCtx* ctx,
         rval = Tss2_Sys_NV_Read(ctx->sys, TPM2_RH_OWNER, nvIndex, &sessionData, len, off, &nvData, &sessionsDataOut);
         if (rval != TSS2_RC_SUCCESS) 
         {
-            ERROR("Tss2_Sys_NV_Read returned: 0x%x", rval);
+            LOG_ERROR("Tss2_Sys_NV_Read returned: 0x%x", rval);
             free(*nvBytes);
             return rval;
         }
 
         if (len != nvData.size)
         {
-            ERROR("The nvdata size did not match the requested length [len:0x%x, size:0x%x]", len, nvData.size);
+            LOG_ERROR("The nvdata size did not match the requested length [len:0x%x, size:0x%x]", len, nvData.size);
             free(*nvBytes);
             return rval;
         }
@@ -251,14 +251,14 @@ int NvWrite(const tpmCtx* ctx,
 
     if(nvBytesLength == 0 || nvBytesLength > TPM2_MAX_NV_BUFFER_SIZE)
     {
-        ERROR("Invalid nv write buffer size: 0x%x", nvBytesLength);
+        LOG_ERROR("Invalid nv write buffer size: 0x%x", nvBytesLength);
         return -1;
     }
 
     rval = GetMaxNvBufferSize(ctx->sys, &maxNvBufferSize);
     if (rval != TSS2_RC_SUCCESS) 
     {
-        ERROR("GetMaxNVBufferSize returned: 0x%x", rval);
+        LOG_ERROR("GetMaxNVBufferSize returned: 0x%x", rval);
         return rval;
     }
 
@@ -272,7 +272,7 @@ int NvWrite(const tpmCtx* ctx,
         rval = Tss2_Sys_NV_Write(ctx->sys, TPM2_RH_OWNER, nvIndex, &sessionData, &nvWriteData, (uint16_t)pos, &sessionDataOut);
         if (rval != TSS2_RC_SUCCESS) 
         {
-            ERROR("Tss2_Sys_NV_Write returned error:0x%x", rval);
+            LOG_ERROR("Tss2_Sys_NV_Write returned error:0x%x", rval);
             return rval;
         }
 

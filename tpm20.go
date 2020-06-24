@@ -1,5 +1,3 @@
-// +build linux
-
 /*
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
@@ -7,10 +5,23 @@
 
 package tpmprovider
 
-//// The following CFLAGS require 'export CGO_CFLAGS_ALLOW="-f.*"' in the executable that
-//// uses tpm-provider (i.e. go-trust-agent and workload-agent).
-// #cgo CFLAGS: -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv -fstack-protector-strong
-// #cgo LDFLAGS: -ltss2-sys -ltss2-tcti-tabrmd -ltss2-mu -lssl -lcrypto -ltss2-tcti-device
+//-------------------------------------------------------------------------------------------------
+// CGO
+//
+// Windows...
+// - Link to tss2-sys.dll, tss2-mu.dll and tss2-tcti-tbs.dll in the 'out' subdirectory.
+// - Add 'include' folder to path in the git submodule at tpm2-tss directory
+//
+// ...
+// - Link to system installed tss2 libraries and other libraries
+// 
+// Include "tpm.h" for both.
+//-------------------------------------------------------------------------------------------------
+
+// #cgo windows LDFLAGS: -L out -ltss2-sys -ltss2-mu -ltss2-tcti-tbs
+// #cgo windows CFLAGS: -Itpm2-tss/include
+// #cgo linux CFLAGS: -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv -fstack-protector-strong
+// #cgo linux LDFLAGS: -ltss2-sys -ltss2-tcti-tabrmd -ltss2-mu -lssl -lcrypto -ltss2-tcti-device
 // #include "tpm.h"
 import "C"
 
@@ -22,8 +33,7 @@ import (
 	"unsafe"
 )
 
-type linuxTpmFactory struct {
-	TpmFactory
+type tpmFactory struct {
 	tctiType uint32
 }
 
@@ -32,32 +42,32 @@ const (
 	INVALID_AIK_SECRET_KEY = "Invalid aik secret key"
 )
 
-func (linuxImpl linuxTpmFactory) NewTpmProvider() (TpmProvider, error) {
+func (impl tpmFactory) NewTpmProvider() (TpmProvider, error) {
 	var ctx *C.tpmCtx
-	ctx = C.TpmCreate((C.uint)(linuxImpl.tctiType))
+	ctx = C.TpmCreate((C.uint)(impl.tctiType))
 
 	if ctx == nil {
 		return nil, errors.New("Could not create tpm context")
 	}
 
-	tpmProvider := tpm20Linux{tpmCtx: ctx}
+	tpmProvider := tpm20{tpmCtx: ctx}
 	return &tpmProvider, nil
 }
 
-type tpm20Linux struct {
+type tpm20 struct {
 	tpmCtx *C.tpmCtx
 }
 
-func (t *tpm20Linux) Close() {
+func (t *tpm20) Close() {
 	C.TpmDelete(t.tpmCtx)
 	t.tpmCtx = nil
 }
 
-func (t *tpm20Linux) Version() C.TPM_VERSION {
+func (t *tpm20) Version() C.TPM_VERSION {
 	return C.Version(t.tpmCtx)
 }
 
-func (t *tpm20Linux) TakeOwnership(ownerSecretKey string) error {
+func (t *tpm20) TakeOwnership(ownerSecretKey string) error {
 
 	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
 	if err != nil {
@@ -74,7 +84,7 @@ func (t *tpm20Linux) TakeOwnership(ownerSecretKey string) error {
 	return nil
 }
 
-func (t *tpm20Linux) IsOwnedWithAuth(ownerSecretKey string) (bool, error) {
+func (t *tpm20) IsOwnedWithAuth(ownerSecretKey string) (bool, error) {
 
 	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
 	if err != nil {
@@ -95,7 +105,7 @@ func (t *tpm20Linux) IsOwnedWithAuth(ownerSecretKey string) (bool, error) {
 	return false, fmt.Errorf("IsOwnedWithAuth returned error code 0x%X", rc)
 }
 
-func (t *tpm20Linux) GetAikBytes() ([]byte, error) {
+func (t *tpm20) GetAikBytes() ([]byte, error) {
 	var returnValue []byte
 	var aikPublicBytes *C.uint8_t
 	var aikPublicBytesLength C.int
@@ -118,7 +128,7 @@ func (t *tpm20Linux) GetAikBytes() ([]byte, error) {
 	return returnValue, nil
 }
 
-func (t *tpm20Linux) GetAikName() ([]byte, error) {
+func (t *tpm20) GetAikName() ([]byte, error) {
 	var returnValue []byte
 	var aikName *C.uint8_t
 	var aikNameLength C.int
@@ -140,7 +150,7 @@ func (t *tpm20Linux) GetAikName() ([]byte, error) {
 	return returnValue, nil
 }
 
-func (t *tpm20Linux) CreateAik(ownerSecretKey string, aikSecretKey string) error {
+func (t *tpm20) CreateAik(ownerSecretKey string, aikSecretKey string) error {
 
 	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
 	if err != nil {
@@ -197,7 +207,7 @@ func (t *tpm20Linux) CreateAik(ownerSecretKey string, aikSecretKey string) error
 //
 // Yes, we could reference tss2_tpm2_types.h and build those structures directly
 // in go.  But, this is the only application specific function that requires structured
-// parameters -- the intent was to hide the Tss2 dependencies in tpm20linux.h (not tpm.h)
+// parameters -- the intent was to hide the Tss2 dependencies in tpm20.h (not tpm.h)
 // so that we could plug in other native implementations (ex. tpm20windows.h could use
 // TSS MSR c++).
 //
@@ -205,8 +215,8 @@ func (t *tpm20Linux) CreateAik(ownerSecretKey string, aikSecretKey string) error
 // gonna stick with it.  Let's build the TPML_PCR_SELECTION structure and pass it in as
 // bytes, c will cast it to the structure.
 //
-// KWT:  Reevaluate layering.  Could be tpm.go (interface) -> tpm20linux.go (translates go
-// parameters tss2 structures) -> tss2 call. Right now it is tpm.go -> tpm20linux.go -> c code
+// KWT:  Reevaluate layering.  Could be tpm.go (interface) -> tpm20.go (translates go
+// parameters tss2 structures) -> tss2 call. Right now it is tpm.go -> tpm20.go -> c code
 // (translation of raw buffers to tss structures) -> tss2 call.
 func getPcrSelectionBytes(pcrBanks []string, pcrs []int) ([]byte, error) {
 
@@ -254,7 +264,7 @@ func getPcrSelectionBytes(pcrBanks []string, pcrs []int) ([]byte, error) {
 	return buf, nil
 }
 
-func (t *tpm20Linux) GetTpmQuote(aikSecretKey string, nonce []byte, pcrBanks []string, pcrs []int) ([]byte, error) {
+func (t *tpm20) GetTpmQuote(aikSecretKey string, nonce []byte, pcrBanks []string, pcrs []int) ([]byte, error) {
 
 	var quoteBytes []byte
 	var cQuote *C.uint8_t
@@ -296,7 +306,7 @@ func (t *tpm20Linux) GetTpmQuote(aikSecretKey string, nonce []byte, pcrBanks []s
 	return quoteBytes, nil
 }
 
-func (t *tpm20Linux) ActivateCredential(ownerSecretKey string, aikSecretKey string, credentialBytes []byte, secretBytes []byte) ([]byte, error) {
+func (t *tpm20) ActivateCredential(ownerSecretKey string, aikSecretKey string, credentialBytes []byte, secretBytes []byte) ([]byte, error) {
 
 	var returnValue []byte
 	var decrypted *C.uint8_t
@@ -338,7 +348,7 @@ func (t *tpm20Linux) ActivateCredential(ownerSecretKey string, aikSecretKey stri
 	return returnValue, nil
 }
 
-func (t *tpm20Linux) NvDefine(ownerSecretKey string, nvIndex uint32, indexSize uint16) error {
+func (t *tpm20) NvDefine(ownerSecretKey string, nvIndex uint32, indexSize uint16) error {
 
 	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
 	if err != nil {
@@ -358,7 +368,7 @@ func (t *tpm20Linux) NvDefine(ownerSecretKey string, nvIndex uint32, indexSize u
 	return nil
 }
 
-func (t *tpm20Linux) NvRelease(ownerSecretKey string, nvIndex uint32) error {
+func (t *tpm20) NvRelease(ownerSecretKey string, nvIndex uint32) error {
 
 	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
 	if err != nil {
@@ -377,7 +387,7 @@ func (t *tpm20Linux) NvRelease(ownerSecretKey string, nvIndex uint32) error {
 	return nil
 }
 
-func (t *tpm20Linux) NvRead(ownerSecretKey string, nvIndex uint32) ([]byte, error) {
+func (t *tpm20) NvRead(ownerSecretKey string, nvIndex uint32) ([]byte, error) {
 
 	var returnValue []byte
 	var nvData *C.uint8_t
@@ -409,7 +419,7 @@ func (t *tpm20Linux) NvRead(ownerSecretKey string, nvIndex uint32) ([]byte, erro
 	return returnValue, nil
 }
 
-func (t *tpm20Linux) NvWrite(ownerSecretKey string, handle uint32, data []byte) error {
+func (t *tpm20) NvWrite(ownerSecretKey string, handle uint32, data []byte) error {
 
 	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
 	if err != nil {
@@ -434,7 +444,7 @@ func (t *tpm20Linux) NvWrite(ownerSecretKey string, handle uint32, data []byte) 
 	return nil
 }
 
-func (tpm *tpm20Linux) NvIndexExists(nvIndex uint32) (bool, error) {
+func (tpm *tpm20) NvIndexExists(nvIndex uint32) (bool, error) {
 
 	rc := C.NvIndexExists(tpm.tpmCtx, C.uint(nvIndex))
 	if rc == -1 {
@@ -448,7 +458,7 @@ func (tpm *tpm20Linux) NvIndexExists(nvIndex uint32) (bool, error) {
 	return true, nil
 }
 
-func (tpm *tpm20Linux) CreatePrimaryHandle(ownerSecretKey string, handle uint32) error {
+func (tpm *tpm20) CreatePrimaryHandle(ownerSecretKey string, handle uint32) error {
 
 	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
 	if err != nil {
@@ -467,15 +477,15 @@ func (tpm *tpm20Linux) CreatePrimaryHandle(ownerSecretKey string, handle uint32)
 	return nil
 }
 
-func (t *tpm20Linux) CreateSigningKey(signingSecretKey string, aikSecretKey string) (*CertifiedKey, error) {
+func (t *tpm20) CreateSigningKey(signingSecretKey string, aikSecretKey string) (*CertifiedKey, error) {
 	return t.createCertifiedKey(signingSecretKey, aikSecretKey, C.TPM_CERTIFIED_KEY_USAGE_SIGNING)
 }
 
-func (t *tpm20Linux) CreateBindingKey(bindingSecretKey string, aikSecretKey string) (*CertifiedKey, error) {
+func (t *tpm20) CreateBindingKey(bindingSecretKey string, aikSecretKey string) (*CertifiedKey, error) {
 	return t.createCertifiedKey(bindingSecretKey, aikSecretKey, C.TPM_CERTIFIED_KEY_USAGE_BINDING)
 }
 
-func (t *tpm20Linux) createCertifiedKey(keySecret string, aikSecretKey string, keyUsage int) (*CertifiedKey, error) {
+func (t *tpm20) createCertifiedKey(keySecret string, aikSecretKey string, keyUsage int) (*CertifiedKey, error) {
 
 	keySecretBytes, err := validateAndConvertKey(keySecret)
 	if err != nil {
@@ -518,7 +528,7 @@ func (t *tpm20Linux) createCertifiedKey(keySecret string, aikSecretKey string, k
 	return nil, fmt.Errorf("CreateCertifiedKey returned error code: %x", rc)
 }
 
-func (t *tpm20Linux) Unbind(certifiedKey *CertifiedKey, bindingSecretKey string, encryptedData []byte) ([]byte, error) {
+func (t *tpm20) Unbind(certifiedKey *CertifiedKey, bindingSecretKey string, encryptedData []byte) ([]byte, error) {
 	var returnValue []byte
 	var decryptedBytes *C.uint8_t
 	var decryptedBytesLength C.int
@@ -550,7 +560,7 @@ func (t *tpm20Linux) Unbind(certifiedKey *CertifiedKey, bindingSecretKey string,
 	return returnValue, nil
 }
 
-func (t *tpm20Linux) Sign(certifiedKey *CertifiedKey, signingSecretKey string, hashed []byte) ([]byte, error) {
+func (t *tpm20) Sign(certifiedKey *CertifiedKey, signingSecretKey string, hashed []byte) ([]byte, error) {
 	var returnValue []byte
 	var signatureBytes *C.uint8_t
 	var signatureBytesLength C.int
@@ -598,7 +608,7 @@ func (t *tpm20Linux) Sign(certifiedKey *CertifiedKey, signingSecretKey string, h
 	return returnValue, nil
 }
 
-func (tpm *tpm20Linux) PublicKeyExists(handle uint32) (bool, error) {
+func (tpm *tpm20) PublicKeyExists(handle uint32) (bool, error) {
 
 	rc := C.PublicKeyExists(tpm.tpmCtx, C.uint(handle))
 	if rc != 0 {

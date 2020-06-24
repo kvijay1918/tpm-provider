@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "tpm20linux.h"
+#include "tpm20.h"
 #include <tss2/tss2_mu.h>
 
 int Sign(const tpmCtx* ctx, 
@@ -42,49 +42,49 @@ int Sign(const tpmCtx* ctx,
     //---------------------------------------------------------------------------------------------
     if (signingSecretKey == NULL) 
     {
-        ERROR("The key secret must be provided");
+        LOG_ERROR("The key secret must be provided");
         return -1;
     }
 
     if (signingSecretKeyLength ==  0 || signingSecretKeyLength > BUFFER_SIZE(TPM2B_AUTH, buffer))
     {
-        ERROR("Invalid key secret length: %x", signingSecretKeyLength);
+        LOG_ERROR("Invalid key secret length: %x", signingSecretKeyLength);
         return -1;
     }
 
     if (publicKeyBytes == NULL)
     {
-        ERROR("The public key bytes must be provided");
+        LOG_ERROR("The public key bytes must be provided");
         return -1;
     }
 
     if (privateKeyBytes == NULL)
     {
-        ERROR("The private key bytes must be provided");
+        LOG_ERROR("The private key bytes must be provided");
         return -1;
     }
 
     if (hashBytes == NULL)
     {
-        ERROR("The hash bytes must be provided");
+        LOG_ERROR("The hash bytes must be provided");
         return -1;
     }
 
     if (hashBytesLength == 0 || hashBytesLength > ARRAY_SIZE(hash.buffer))
     {
-        ERROR("Invalid hash bytes length: %x", hashBytesLength);
+        LOG_ERROR("Invalid hash bytes length: %x", hashBytesLength);
         return -1;
     }
 
     if (signatureBytes == NULL)
     {
-        ERROR("The signature bytes must be provided");
+        LOG_ERROR("The signature bytes must be provided");
         return -1;
     }
 
     if (signatureBytesLength == NULL)
     {
-        ERROR("The signature bytes length cannot be null");
+        LOG_ERROR("The signature bytes length cannot be null");
         return -1;
     }
 
@@ -95,7 +95,7 @@ int Sign(const tpmCtx* ctx,
     rval = Tss2_MU_TPM2B_PUBLIC_Unmarshal(publicKeyBytes, publicKeyBytesLength, &offset, &inPublic);
     if (rval != TSS2_RC_SUCCESS)
     {
-        ERROR("Tss2_MU_TPM2B_PUBLIC_Unmarshal returned error code: 0x%x", rval);
+        LOG_ERROR("Tss2_MU_TPM2B_PUBLIC_Unmarshal returned error code: 0x%x", rval);
         return rval;
     }
 
@@ -103,7 +103,7 @@ int Sign(const tpmCtx* ctx,
     rval = Tss2_MU_TPM2B_PRIVATE_Unmarshal(privateKeyBytes, privateKeyBytesLength, &offset, &inPrivate);
     if (rval != TSS2_RC_SUCCESS)
     {
-        ERROR("Tss2_MU_TPM2B_PRIVATE_Unmarshal returned error code: 0x%x", rval);
+        LOG_ERROR("Tss2_MU_TPM2B_PRIVATE_Unmarshal returned error code: 0x%x", rval);
         return rval;
     }
 
@@ -123,7 +123,7 @@ int Sign(const tpmCtx* ctx,
 
     if(rval != TSS2_RC_SUCCESS)
     {
-        ERROR("Tss2_Sys_Load returned error code: 0x%x", rval);
+        LOG_ERROR("Tss2_Sys_Load returned error code: 0x%x", rval);
         return rval;
     }
 
@@ -155,7 +155,7 @@ int Sign(const tpmCtx* ctx,
     
     if (rval != TSS2_RC_SUCCESS)
     {
-        ERROR("Tss2_Sys_Sign returned error code: 0x%x", rval);
+        LOG_ERROR("Tss2_Sys_Sign returned error code: 0x%x", rval);
         return rval;
     }
 
@@ -166,14 +166,14 @@ int Sign(const tpmCtx* ctx,
     //---------------------------------------------------------------------------------------------
     if (signature.signature.rsassa.sig.size == 0 || signature.signature.rsassa.sig.size > ARRAY_SIZE(signature.signature.rsassa.sig.buffer))
     {
-        ERROR("Invalid signature bytes size: %x", signature.signature.rsassa.sig.size);
+        LOG_ERROR("Invalid signature bytes size: %x", signature.signature.rsassa.sig.size);
         return -1;
     }
     
     *signatureBytes = (uint8_t*)calloc(signature.signature.rsassa.sig.size, 1);
     if (!signatureBytes)
     {
-        ERROR("Could not allocate signature buffer");
+        LOG_ERROR("Could not allocate signature buffer");
         return -1;
     }
 

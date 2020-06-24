@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "tpm20linux.h"
+#include "tpm20.h"
 
 //-------------------------------------------------------------------------------------------------
 // G E T   P U B   A K
@@ -44,13 +44,13 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
 
     if (secretKey == NULL) 
     {
-        ERROR("The owner secret key cannot be null");
+        LOG_ERROR("The owner secret key cannot be null");
         return -1;
     }
 
     if (aikSecretKey == NULL) 
     {
-        ERROR("The aik secret key cannot be null");
+        LOG_ERROR("The aik secret key cannot be null");
         return -1;
     }
     
@@ -97,14 +97,14 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
     rval = Tss2_Sys_StartAuthSession(sys, tpmKey, bind, 0, &nonceCaller, &encryptedSalt, TPM2_SE_POLICY, &symmetric, TPM2_ALG_SHA256, &sessionHandle, &nonceNewer, 0);
     if( rval != TPM2_RC_SUCCESS )
     {
-        ERROR("Tss2_Sys_StartAuthSession Error. TPM Error:0x%x", rval);
+        LOG_ERROR("Tss2_Sys_StartAuthSession Error. TPM Error:0x%x", rval);
         return rval;
     }
 
     rval = Tss2_Sys_PolicySecret(sys, TPM2_RH_ENDORSEMENT, sessionHandle, &sessions_data, 0, 0, 0, 0, 0, 0, 0);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_PolicySecret Error. TPM Error:0x%x", rval);
+        LOG_ERROR("Tss2_Sys_PolicySecret Error. TPM Error:0x%x", rval);
         return rval;
     }
     // ---------------------------------------------------------------------------------------------
@@ -119,7 +119,7 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
             &sessions_data_out);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_Create Error. TPM Error:0x%x", rval);
+        LOG_ERROR("Tss2_Sys_Create Error. TPM Error:0x%x", rval);
         return rval;
     }
 
@@ -127,7 +127,7 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
     rval = Tss2_Sys_FlushContext(sys, sessionHandle);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("TPM2_Sys_FlushContext Error. TPM Error:0x%x", rval);
+        LOG_ERROR("TPM2_Sys_FlushContext Error. TPM Error:0x%x", rval);
         return rval;
     }
 
@@ -140,14 +140,14 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
     rval = Tss2_Sys_StartAuthSession(sys, tpmKey, bind, 0, &nonceCaller, &encryptedSalt, TPM2_SE_POLICY, &symmetric, TPM2_ALG_SHA256, &sessionHandle, &nonceNewer, 0);
     if( rval != TPM2_RC_SUCCESS )
     {
-        ERROR("Tss2_Sys_StartAuthSession Error. TPM Error:0x%x", rval);
+        LOG_ERROR("Tss2_Sys_StartAuthSession Error. TPM Error:0x%x", rval);
         return rval;
     }
 
     rval = Tss2_Sys_PolicySecret(sys, TPM2_RH_ENDORSEMENT, sessionHandle, &sessions_data, 0, 0, 0, 0, 0, 0, 0);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_PolicySecret Error. TPM Error:0x%x", rval);
+        LOG_ERROR("Tss2_Sys_PolicySecret Error. TPM Error:0x%x", rval);
         return rval;
     }
 
@@ -159,14 +159,14 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
     rval = Tss2_Sys_Load(sys, TPM_HANDLE_EK_CERT, &sessions_data, &out_private, &out_public, &loaded_sha1_key_handle, &name, &sessions_data_out);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("TPM2_Load Error. TPM Error:0x%x", rval);
+        LOG_ERROR("TPM2_Load Error. TPM Error:0x%x", rval);
         return rval;
     }
 
     rval = Tss2_Sys_FlushContext(sys, sessionHandle);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("TPM2_Sys_FlushContext Error. TPM Error:0x%x", rval);
+        LOG_ERROR("TPM2_Sys_FlushContext Error. TPM Error:0x%x", rval);
         return rval;
     }
 
@@ -180,14 +180,14 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
     rval = Tss2_Sys_EvictControl(sys, TPM2_RH_OWNER, loaded_sha1_key_handle, &sessions_data, TPM_HANDLE_AIK, &sessions_data_out);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("TPM2_EvictControl Error. TPM Error:0x%x", rval);
+        LOG_ERROR("TPM2_EvictControl Error. TPM Error:0x%x", rval);
         return rval;
     }
 
     rval = Tss2_Sys_FlushContext(sys, loaded_sha1_key_handle);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Flush transient AK error. TPM Error:0x%x", rval);
+        LOG_ERROR("Flush transient AK error. TPM Error:0x%x", rval);
         return rval;
     }
 
@@ -223,7 +223,7 @@ static int getpubek(TSS2_SYS_CONTEXT *sys,
 
     if (secretKey == NULL) 
     {
-        ERROR("The owner secret key cannot be null");
+        LOG_ERROR("The owner secret key cannot be null");
         return -1;
     }
 
@@ -277,7 +277,7 @@ static int getpubek(TSS2_SYS_CONTEXT *sys,
 
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("TPM2_CreatePrimary Error. TPM Error:0x%x", rval);
+        LOG_ERROR("TPM2_CreatePrimary Error. TPM Error:0x%x", rval);
         return rval;
     }
 
@@ -288,7 +288,7 @@ static int getpubek(TSS2_SYS_CONTEXT *sys,
     rval = Tss2_Sys_EvictControl(sys, TPM2_RH_OWNER, handle2048ek, &sessionsData, TPM_HANDLE_EK_CERT, &sessionsDataOut);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("EvictControl failed. Could not make EK persistent. TPM Error:0x%x", rval);
+        LOG_ERROR("EvictControl failed. Could not make EK persistent. TPM Error:0x%x", rval);
         return rval;
     }
 
@@ -297,7 +297,7 @@ static int getpubek(TSS2_SYS_CONTEXT *sys,
     rval = Tss2_Sys_FlushContext(sys, handle2048ek);
     if (rval != TPM2_RC_SUCCESS)
     {
-        ERROR("Flush transient EK failed. TPM Error:0x%x", rval);
+        LOG_ERROR("Flush transient EK failed. TPM Error:0x%x", rval);
         return rval;
     }
 
@@ -330,14 +330,14 @@ int CreateAik(const tpmCtx* ctx,
     rval = InitializeTpmAuth(&ownerAuth, ownerSecretKey, ownerSecretKeyLength);
     if(rval != 0)
     {
-        ERROR("There was an error creating the tpm owner secret");
+        LOG_ERROR("There was an error creating the tpm owner secret");
         return rval;
     }
 
     rval = InitializeTpmAuth(&aikAuth, aikSecretKey, aikSecretKeyLength);
     if(rval != 0)
     {
-        ERROR("There was an error creating the aik secret");
+        LOG_ERROR("There was an error creating the aik secret");
         return rval;
     }
 
@@ -402,14 +402,14 @@ int GetAikName(const tpmCtx* ctx,
 
     if (name.size == 0 || name.size > ARRAY_SIZE(name.name))
     {
-        ERROR("Invalid aik name length: %x", name.size)
+        LOG_ERROR("Invalid aik name length: %x", name.size)
         return -1;
     }
 
     *aikName = calloc(name.size, 1);
     if(!*aikName)
     {
-        ERROR("Could not allocate aik name buffer");
+        LOG_ERROR("Could not allocate aik name buffer");
         return -1;
     }
 
@@ -437,14 +437,14 @@ int GetAikBytes(const tpmCtx* ctx,
 
     if(aikPublic.publicArea.unique.rsa.size == 0 || aikPublic.publicArea.unique.rsa.size > ARRAY_SIZE(aikPublic.publicArea.unique.rsa.buffer))
     {
-        ERROR("Incorrect aik buffer length %x", aikPublic.publicArea.unique.rsa.size);
+        LOG_ERROR("Incorrect aik buffer length %x", aikPublic.publicArea.unique.rsa.size);
         return -1;   
     }
 
     *aikBytes = calloc(aikPublic.publicArea.unique.rsa.size, 1);
     if(!*aikBytes) 
     {
-        ERROR("Could not allocate aik public buffer");
+        LOG_ERROR("Could not allocate aik public buffer");
         return -1;
     }
 

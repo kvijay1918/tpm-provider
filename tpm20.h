@@ -4,18 +4,23 @@
  */
 
 // This file contains all of the tss2 specific functions, defines, etc. to
-// support tpm20linux.go
+// support tpm20.go
 
-#ifndef __TPM_20_LINUX__
-#define __TPM_20_LINUX__
+#ifndef __TPM_20__
+#define __TPM_20__
 
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <tss2/tss2_sys.h>
+
+#if defined(WIN32)
+#include <tss2/tss2_tcti_tbs.h>
+#else
 #include <tss2/tss2-tcti-tabrmd.h>
 #include <tss2/tss2_tcti_device.h>
+#endif
 
 #include "tpm.h"
 
@@ -77,7 +82,7 @@
     })
 
 #define LOG(fmt, ...) fprintf(stdout, "[LOG:%s::%d] " fmt "\n", __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__);
-#define ERROR(fmt, ...) fprintf(stderr, "[ERR:%s::%d] " fmt "\n", __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__);
+#define LOG_ERROR(fmt, ...) fprintf(stderr, "[ERR:%s::%d] " fmt "\n", __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__);
 
 #define ENABLE_DEBUG_LOGGING 0
 #if ENABLE_DEBUG_LOGGING

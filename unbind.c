@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "tpm20linux.h"
+#include "tpm20.h"
 #include <tss2/tss2_mu.h>
 
 int Unbind(const tpmCtx* ctx, 
@@ -45,49 +45,49 @@ int Unbind(const tpmCtx* ctx,
     //---------------------------------------------------------------------------------------------
     if (bindingSecretKey == NULL)
     {
-        ERROR("Invalid key secret parameter");
+        LOG_ERROR("Invalid key secret parameter");
         return -1;
     }
 
     if (bindingSecretKeyLength == 0 || bindingSecretKeyLength > BUFFER_SIZE(TPM2B_AUTH, buffer))
     {
-        ERROR("Invalid key secret length: %x", bindingSecretKeyLength)
+        LOG_ERROR("Invalid key secret length: %x", bindingSecretKeyLength)
         return -1;
     }
 
     if (publicKeyBytes == NULL)
     {
-        ERROR("Invalid public key bytes parameter");
+        LOG_ERROR("Invalid public key bytes parameter");
         return -1;
     }
 
     if (privateKeyBytes == NULL)
     {
-        ERROR("Invalid private key bytes parameter");
+        LOG_ERROR("Invalid private key bytes parameter");
         return -1;
     }
 
     if (encryptedBytes == NULL)
     {
-        ERROR("Invalid encrypted bytes parameter");
+        LOG_ERROR("Invalid encrypted bytes parameter");
         return -1;
     }
 
     if (encryptedBytesLength == 0 || encryptedBytesLength > BUFFER_SIZE(TPM2B_PUBLIC_KEY_RSA, buffer))
     {
-        ERROR("Invalid encrypted bytes length: %x", encryptedBytesLength);
+        LOG_ERROR("Invalid encrypted bytes length: %x", encryptedBytesLength);
         return -1;
     }
 
     if (decryptedData == NULL)
     {
-        ERROR("Invalid decrypted data parameter");
+        LOG_ERROR("Invalid decrypted data parameter");
         return -1;
     }
 
     if (decryptedDataLength == NULL)
     {
-        ERROR("Invalid decrypted data length parameter");
+        LOG_ERROR("Invalid decrypted data length parameter");
         return -1;
     }
 
@@ -99,7 +99,7 @@ int Unbind(const tpmCtx* ctx,
     rval = Tss2_MU_TPM2B_PUBLIC_Unmarshal(publicKeyBytes, publicKeyBytesLength, &offset, &inPublic);
     if (rval != TSS2_RC_SUCCESS)
     {
-        ERROR("Tss2_MU_TPM2B_PUBLIC_Unmarshal returned error code: 0x%x", rval);
+        LOG_ERROR("Tss2_MU_TPM2B_PUBLIC_Unmarshal returned error code: 0x%x", rval);
         return rval;
     }
 
@@ -108,7 +108,7 @@ int Unbind(const tpmCtx* ctx,
     rval = Tss2_MU_TPM2B_PRIVATE_Unmarshal(privateKeyBytes, privateKeyBytesLength, &offset, &inPrivate);
     if (rval != TSS2_RC_SUCCESS)
     {
-        ERROR("Tss2_MU_TPM2B_PRIVATE_Unmarshal returned error code: 0x%x", rval);
+        LOG_ERROR("Tss2_MU_TPM2B_PRIVATE_Unmarshal returned error code: 0x%x", rval);
         return rval;
     }
 
@@ -128,7 +128,7 @@ int Unbind(const tpmCtx* ctx,
 
     if (rval != TSS2_RC_SUCCESS)
     {
-        ERROR("Tss2_Sys_Load returned error code: 0x%x", rval);
+        LOG_ERROR("Tss2_Sys_Load returned error code: 0x%x", rval);
         return rval;
     }
 
@@ -169,7 +169,7 @@ int Unbind(const tpmCtx* ctx,
 
     if (rval != TSS2_RC_SUCCESS)
     {
-        ERROR("Tss2_Sys_RSA_Decrypt returned error code: 0x%x", rval);
+        LOG_ERROR("Tss2_Sys_RSA_Decrypt returned error code: 0x%x", rval);
         return rval;
     }
 
@@ -180,14 +180,14 @@ int Unbind(const tpmCtx* ctx,
     //---------------------------------------------------------------------------------------------
     if (message.size == 0 || message.size > BUFFER_SIZE(TPM2B_PUBLIC_KEY_RSA, buffer)) 
     {
-        ERROR("Invalid message size: %x", message.size)
+        LOG_ERROR("Invalid message size: %x", message.size)
         return -1;
     }
     
     *decryptedData = (uint8_t*)calloc(message.size, 1);
     if (!decryptedData)
     {
-        ERROR("Could not allocate decrypted buffer");
+        LOG_ERROR("Could not allocate decrypted buffer");
         return -1;
     }
 

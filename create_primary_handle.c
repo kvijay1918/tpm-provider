@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "tpm20linux.h"
+#include "tpm20.h"
 #include <tss2/tss2_mu.h>
 
 int CreatePrimaryHandle(const tpmCtx* ctx, 
@@ -53,14 +53,14 @@ int CreatePrimaryHandle(const tpmCtx* ctx,
 
     if(rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_CreatePrimary returned error code: 0x%0x\n", rval);
+        LOG_ERROR("Tss2_Sys_CreatePrimary returned error code: 0x%0x\n", rval);
         return rval;
     }
 
     rval = Tss2_Sys_EvictControl(ctx->sys, TPM2_RH_OWNER, handle2048rsa, &sessionsData, persistHandle, &sessionsDataOut);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_EvictControl returned error code: 0x%x", rval);
+        LOG_ERROR("Tss2_Sys_EvictControl returned error code: 0x%x", rval);
         return rval;
     }
 

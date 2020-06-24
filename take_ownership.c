@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "tpm20linux.h"
+#include "tpm20.h"
 
 static int change_auth(TSS2_SYS_CONTEXT* sys,
                        TPM2B_AUTH* newSecretKey, 
@@ -16,13 +16,13 @@ static int change_auth(TSS2_SYS_CONTEXT* sys,
 
     if (newSecretKey == NULL) 
     {
-        ERROR("The new secret key must be provided");
+        LOG_ERROR("The new secret key must be provided");
         return -1;
     }
 
     if (oldSecretKey == NULL)
     {
-        ERROR("The old secret key must be provided");
+        LOG_ERROR("The old secret key must be provided");
         return -1;
     }
 
@@ -89,7 +89,7 @@ int TakeOwnership(const tpmCtx* ctx,
     rval = InitializeTpmAuth(&newSecretKey, ownerSecretKey, ownerSecretKeyLength);
     if(rval != 0)
     {
-        ERROR("There was an error creating the new TPM2B_AUTH");
+        LOG_ERROR("There was an error creating the new TPM2B_AUTH");
         return rval;
     }
 
@@ -124,14 +124,14 @@ int IsOwnedWithAuth(const tpmCtx* ctx,
     rval = InitializeTpmAuth(&newSecretKey, ownerSecretKey, keyLength);
     if(rval != 0)
     {
-        ERROR("There was an error creating the new TPM2B_AUTH");
+        LOG_ERROR("There was an error creating the new TPM2B_AUTH");
         return -2;
     }
 
     rval = InitializeTpmAuth(&oldSecretKey, ownerSecretKey, keyLength);
     if(rval != 0)
     {
-        ERROR("There was an error creating the old TPM2B_AUTH");
+        LOG_ERROR("There was an error creating the old TPM2B_AUTH");
         return -2;
     }
 

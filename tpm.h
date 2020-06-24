@@ -17,8 +17,10 @@ typedef enum TPM_VERSION
 
 typedef enum TCTI_TYPE
 {
+    TCTI_UNKNOWN = 0,
     TCTI_ABRMD,
-    TCTI_DEVICE
+    TCTI_DEVICE,
+    TCTI_TBS
 } TCTI_TYPE;
 
 typedef enum NV_IDX 
@@ -65,7 +67,7 @@ typedef struct CertifiedKey {
 
 typedef struct tpmCtx tpmCtx;
 
-tpmCtx* TpmCreate(uint tctiType);
+tpmCtx* TpmCreate(unsigned int tctiType);
 
 void TpmDelete(tpmCtx* ctx);
 

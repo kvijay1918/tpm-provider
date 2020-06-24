@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "tpm20linux.h"
+#include "tpm20.h"
 
 // from: https://github.com/tpm2-software/tpm2-tools/blob/3.1.0/tools/tpm2_pcrlist.c
 static int unset_pcr_sections(TPML_PCR_SELECTION *s) 
@@ -58,7 +58,7 @@ static int getPcrs(TSS2_SYS_CONTEXT* sys,
 
         if (rval != TPM2_RC_SUCCESS) 
         {
-            ERROR("Tss2_Sys_PCR_Read error: 0x%0x", rval);
+            LOG_ERROR("Tss2_Sys_PCR_Read error: 0x%0x", rval);
             return rval;
         }
 
@@ -101,7 +101,7 @@ static int getQuote(TSS2_SYS_CONTEXT* sys,
 
     if(rval != TPM2_RC_SUCCESS)
     {
-        ERROR("Tss2_Sys_Quote failed: 0x%0x", rval);
+        LOG_ERROR("Tss2_Sys_Quote failed: 0x%0x", rval);
         return rval;
     }
 
@@ -168,7 +168,7 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
             pcrSize = 64;
             break;
         default:
-            ERROR("Unknown pcr selection hash: %x", pcrSelection->pcrSelections[i].hash);
+            LOG_ERROR("Unknown pcr selection hash: %x", pcrSelection->pcrSelections[i].hash);
             return -1;
         }        
 
@@ -190,7 +190,7 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
     *quoteBytes = (uint8_t*)calloc(bufferSize, 1);
     if(!*quoteBytes) 
     {
-        ERROR("Could not allocate quote buffer");
+        LOG_ERROR("Could not allocate quote buffer");
         return -1;
     }
 
@@ -244,7 +244,7 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
             }
             else
             {
-                ERROR("Invalid pcr measurement size %x at measurement %d, digest %d", pcrMeasurements[i].digests[j].size, i, j);
+                LOG_ERROR("Invalid pcr measurement size %x at measurement %d, digest %d", pcrMeasurements[i].digests[j].size, i, j);
                 return -1;
             }
         }
@@ -277,13 +277,13 @@ int GetTpmQuote(const tpmCtx* ctx,
     rval = InitializeTpmAuth(&aikPassword, aikSecretKey, aikSecretKeyLength);
     if(rval != 0)
     {
-        ERROR("There was an error creating the aik TPM2B_AUTH");
+        LOG_ERROR("There was an error creating the aik TPM2B_AUTH");
         return rval;
     }
 
     if (pcrSelectionBytes == NULL || pcrSelectionBytesLength == 0 || pcrSelectionBytesLength > sizeof(TPML_PCR_SELECTION))
     {
-        ERROR("Invalid pcrselection parameter");
+        LOG_ERROR("Invalid pcrselection parameter");
         return -1;
     }
 
@@ -291,7 +291,7 @@ int GetTpmQuote(const tpmCtx* ctx,
 
     if (qualifyingDataBytes == NULL || qualifyingDataBytesLength == 0 || qualifyingDataBytesLength > ARRAY_SIZE(qualifyingData.buffer))
     {
-        ERROR("Invalid qualifying data parameter");
+        LOG_ERROR("Invalid qualifying data parameter");
         return -1;
     }
 
@@ -317,14 +317,14 @@ int GetTpmQuote(const tpmCtx* ctx,
     // validate the quote data returned from getQuote
     if(quote.size == 0 || quote.size > ARRAY_SIZE(quote.attestationData)) 
     {
-         ERROR("Incorrect quote buffer size: x", quote.size)
+         LOG_ERROR("Incorrect quote buffer size: x", quote.size)
          return -1;   
     }
 
     // validate the signature data returned from getQuote
     if(signature.signature.rsassa.sig.size == 0 || signature.signature.rsassa.sig.size > ARRAY_SIZE(signature.signature.rsassa.sig.buffer)) 
     {
-         ERROR("Incorrect signature buffer size: x", signature.signature.rsassa.sig.size)
+         LOG_ERROR("Incorrect signature buffer size: x", signature.signature.rsassa.sig.size)
          return -1;   
     }
 
@@ -344,7 +344,7 @@ int GetTpmQuote(const tpmCtx* ctx,
     // validate the number or pcrs collected from getPcrs
     if (pcrsCollectedCount <=0 || pcrsCollectedCount > 24)
     {
-         ERROR("Unexpected amount of pcrs collected: x", pcrsCollectedCount)
+         LOG_ERROR("Unexpected amount of pcrs collected: x", pcrsCollectedCount)
          return -1;   
     }
 

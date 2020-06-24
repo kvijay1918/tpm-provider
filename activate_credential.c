@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "tpm20linux.h"
+#include "tpm20.h"
 
 
 // Based on https://github.com/tpm2-software/tpm2-tools/blob/3.1.0/tools/tpm2_activatecredential.c
@@ -33,7 +33,7 @@ static int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys,
 
     if (aikPassword == NULL) 
     {
-        ERROR("The aik password cannot be null");
+        LOG_ERROR("The aik password cannot be null");
         return -1;
     }
 
@@ -42,7 +42,7 @@ static int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys,
 
     if (endorsePassword == NULL) 
     {
-        ERROR("The endorsement password cannot be null");
+        LOG_ERROR("The endorsement password cannot be null");
         return -1;
     }
 
@@ -52,14 +52,14 @@ static int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys,
     rval = Tss2_Sys_StartAuthSession(sys, tpmKey, bind, 0, &nonceCaller, &encryptedSalt, TPM2_SE_POLICY, &symmetric, TPM2_ALG_SHA256, &sessionHandle, &nonceNewer, 0);
     if( rval != TPM2_RC_SUCCESS )
     {
-        ERROR("Tss2_Sys_StartAuthSession Error. TPM Error:0x%x", rval);
+        LOG_ERROR("Tss2_Sys_StartAuthSession Error. TPM Error:0x%x", rval);
         return rval;
     }
 
     rval = TSS2_RETRY_EXP(Tss2_Sys_PolicySecret(sys, TPM2_RH_ENDORSEMENT, sessionHandle, &cmd_auth_array_endorse, 0, 0, 0, 0, 0, 0, 0));
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_PolicySecret Error. TPM Error:0x%x", rval);
+        LOG_ERROR("Tss2_Sys_PolicySecret Error. TPM Error:0x%x", rval);
         return rval;
     }
 
@@ -70,7 +70,7 @@ static int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys,
     rval = TSS2_RETRY_EXP(Tss2_Sys_ActivateCredential(sys, TPM_HANDLE_AIK, TPM_HANDLE_EK_CERT, &cmd_auth_array_password, credentialBlob, secret, certInfoData, 0));
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_ActivateCredential failed. TPM Error:0x%x", rval);
+        LOG_ERROR("Tss2_Sys_ActivateCredential failed. TPM Error:0x%x", rval);
         return rval;
     }
 
@@ -78,7 +78,7 @@ static int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys,
     rval = Tss2_Sys_FlushContext(sys, sessionHandle);
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("TPM2_Sys_FlushContext Error. TPM Error:0x%x", rval);
+        LOG_ERROR("TPM2_Sys_FlushContext Error. TPM Error:0x%x", rval);
         return rval;
     }
  
@@ -112,7 +112,7 @@ int ActivateCredential(const tpmCtx* ctx,
     rval = InitializeTpmAuth(&endorsePassword.hmac, ownerSecretKey, ownerSecretKeyLength);
     if(rval != 0)
     {
-        ERROR("There was an error populating the owner secret");
+        LOG_ERROR("There was an error populating the owner secret");
         return -1;
     }
 
@@ -120,7 +120,7 @@ int ActivateCredential(const tpmCtx* ctx,
     InitializeTpmAuth(&aikPassword.hmac, aikSecretKey, aikSecretKeyLength);
     if(rval != 0)
     {
-        ERROR("There was an error populating the aik secret");
+        LOG_ERROR("There was an error populating the aik secret");
         return -1;
     }
 
@@ -129,7 +129,7 @@ int ActivateCredential(const tpmCtx* ctx,
     //
     if(credentialBytes == NULL || credentialBytesLength == 0 || credentialBytesLength > ARRAY_SIZE(credentialBlob.credential))
     {
-        ERROR("Invalid size of credential bytes");
+        LOG_ERROR("Invalid size of credential bytes");
         return -1;
     }
 
@@ -141,7 +141,7 @@ int ActivateCredential(const tpmCtx* ctx,
     //
     if(secretBytes == NULL || secretBytesLength == 0 || secretBytesLength > ARRAY_SIZE(secret.secret))
     {
-        ERROR("Invalid secret bytes");
+        LOG_ERROR("Invalid secret bytes");
         return -1;
     }
 
@@ -159,7 +159,7 @@ int ActivateCredential(const tpmCtx* ctx,
 
     if (certInfoData.size == 0 || certInfoData.size > ARRAY_SIZE(certInfoData.buffer))
     {
-        ERROR("Incorrect certificate info size");
+        LOG_ERROR("Incorrect certificate info size");
         return -1;
     }
 
@@ -167,7 +167,7 @@ int ActivateCredential(const tpmCtx* ctx,
     *decrypted = (uint8_t*)calloc(certInfoData.size, 1);
     if (!*decrypted)
     {
-        ERROR("Could not allocated decrypted buffer");
+        LOG_ERROR("Could not allocated decrypted buffer");
         return -1;
     }
 

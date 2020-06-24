@@ -2,9 +2,9 @@
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "tpm20linux.h"
+#include "tpm20.h"
 
-tpmCtx* TpmCreate(uint tctiType)
+tpmCtx* TpmCreate(unsigned int tctiType)
 {
     tpmCtx* ctx = NULL;
     size_t size = 0;
@@ -14,37 +14,45 @@ tpmCtx* TpmCreate(uint tctiType)
 
     if (tctiType != TCTI_ABRMD && tctiType != TCTI_DEVICE) 
     {
-        ERROR("Incorrect tcti type: %d\n", tctiType);
+        LOG_ERROR("Incorrect tcti type: %d\n", tctiType);
         return NULL;
     }
 
     ctx = (tpmCtx*)calloc(1, sizeof(tpmCtx));
     if(ctx == NULL)
     {
-        ERROR("Could not allocate tpm context\n");
+        LOG_ERROR("Could not allocate tpm context\n");
         return NULL;
     }
 
     ctx->version = TPM_VERSION_20;
 
+#if defined(WIN32)
+    rc = Tss2_Tcti_Tbs_Init(NULL, &size, NULL);
+#else
     if (tctiType == TCTI_DEVICE) 
     {
-        rc = Tss2_Tcti_Device_Init (NULL, &size, NULL);
+        rc = Tss2_Tcti_Device_Init(NULL, &size, NULL);
     }
     else 
     {
         rc = Tss2_Tcti_Tabrmd_Init(NULL, &size, NULL);
     }
+#endif
+
     
     if (rc != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Tcti_Tabrmd_Init return %d\n", rc);
+        LOG_ERROR("Initializing the TCTI return %d\n", rc);
         free(ctx);
         return NULL;
     }
 
     ctx->tcti = (TSS2_TCTI_CONTEXT*)calloc(1, size);
 
+#if defined(WIN32)
+    rc = Tss2_Tcti_Tbs_Init(ctx->tcti, &size, NULL);
+#else
     if (tctiType == TCTI_DEVICE) 
     {
         rc = Tss2_Tcti_Device_Init(ctx->tcti, &size, conf);
@@ -53,10 +61,12 @@ tpmCtx* TpmCreate(uint tctiType)
     {
         rc = Tss2_Tcti_Tabrmd_Init(ctx->tcti, &size, NULL);
     }
+#endif
+
 
     if (rc != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Tcti_Tabrmd_Init returned %d\n", rc);
+        LOG_ERROR("Could not create TCTI: %d\n", rc);
         free(ctx);
         return NULL;
     }
@@ -70,7 +80,7 @@ tpmCtx* TpmCreate(uint tctiType)
     ctx->sys = (TSS2_SYS_CONTEXT*)calloc(1, size);
     if(ctx == NULL)
     {
-        ERROR("Could not allocate TSS2_SYS_CONTEXT\n");
+        LOG_ERROR("Could not allocate TSS2_SYS_CONTEXT\n");
         free(ctx);
         return NULL;
     }
@@ -78,7 +88,7 @@ tpmCtx* TpmCreate(uint tctiType)
     rc = Tss2_Sys_Initialize(ctx->sys, size, ctx->tcti, &abiVersion);
     if (rc != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_Initialize returned %d\n", rc);
+        LOG_ERROR("Tss2_Sys_Initialize returned %d\n", rc);
         free(ctx);
         return NULL;
     }

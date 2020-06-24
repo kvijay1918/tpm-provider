@@ -2,7 +2,7 @@
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
  */
-#include "tpm20linux.h"
+#include "tpm20.h"
 #include <tss2/tss2_mu.h>
 
 int CreateCertifiedKey(const tpmCtx* ctx, 
@@ -47,31 +47,31 @@ int CreateCertifiedKey(const tpmCtx* ctx,
     //---------------------------------------------------------------------------------------------
     if(!keyOut)
     {
-        ERROR("The certified key was not provided");
+        LOG_ERROR("The certified key was not provided");
         return -1;
     }
 
     if (ownerSecretKey == NULL) 
     {
-        ERROR("The owner secret key must be provided");
+        LOG_ERROR("The owner secret key must be provided");
         return -1;
     }
 
     if (ownerSecretKeyLength == 0 || ownerSecretKeyLength > BUFFER_SIZE(TPM2B_AUTH, buffer))
     {
-        ERROR("The owner secret key length is incorrect: %x", ownerSecretKeyLength);
+        LOG_ERROR("The owner secret key length is incorrect: %x", ownerSecretKeyLength);
         return -1;
     }
 
     if (aikSecretKey == NULL) 
     {
-        ERROR("The aik secret key must be provided");
+        LOG_ERROR("The aik secret key must be provided");
         return -1;
     }
 
     if (aikSecretKeyLength == 0 || aikSecretKeyLength > BUFFER_SIZE(TPM2B_AUTH, buffer))
     {
-        ERROR("The aik secret key length is incorrect: %x", aikSecretKeyLength);
+        LOG_ERROR("The aik secret key length is incorrect: %x", aikSecretKeyLength);
         return -1;
     }
 
@@ -82,7 +82,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
     rval = PublicKeyExists(ctx, TPM_HANDLE_PRIMARY);
     if(rval == -1)
     {
-        ERROR("The public key at %x does not exists", TPM_HANDLE_PRIMARY);
+        LOG_ERROR("The public key at %x does not exists", TPM_HANDLE_PRIMARY);
         return -1;
     }
 
@@ -119,7 +119,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
     }
     else
     {
-        ERROR("Invalid key usage: %d", keyUsage);
+        LOG_ERROR("Invalid key usage: %d", keyUsage);
         return -1;
     }
     
@@ -139,7 +139,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
 
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_Create returned error: 0x%x", rval);
+        LOG_ERROR("Tss2_Sys_Create returned error: 0x%x", rval);
         return rval;
     }
 
@@ -157,7 +157,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
 
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("TPM2_Load returned error: 0x%x", rval);
+        LOG_ERROR("TPM2_Load returned error: 0x%x", rval);
         return rval;
     }
 
@@ -192,7 +192,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
 
     if (rval != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Sys_Certify returned error: 0x%x", rval);
+        LOG_ERROR("Tss2_Sys_Certify returned error: 0x%x", rval);
         return rval;
     }
 
@@ -208,7 +208,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
     if (!keyOut->publicKey.buffer || !keyOut->privateBlob.buffer || !keyOut->keySignature.buffer ||
         !keyOut->keyAttestation.buffer)
     {
-        ERROR("Could not allocate certified key buffers")
+        LOG_ERROR("Could not allocate certified key buffers")
         goto error;
     }
 

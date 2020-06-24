@@ -34,6 +34,7 @@ const (
 
 	TCTI_ABRMD = C.TCTI_ABRMD
 	TCTI_DEVICE = C.TCTI_DEVICE
+	TCTI_TBS = C.TCTI_TBS
 )
 
 type TpmProvider interface {

@@ -1,4 +1,4 @@
-// +build unit_test
+// +build linux
 
 /*
  * Copyright (C) 2020 Intel Corporation
@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	OwnerSecretKey       = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+	OwnerSecretKey     = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
 	AikSecretKey       = "beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"
 	BadSecretKey       = "b000b000b000b000b000b000b000b000b000b000"
 	CertifiedKeySecret = "feedfeedfeedfeedfeedfeedfeedfeedfeedfeed"

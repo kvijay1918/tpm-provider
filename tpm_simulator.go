@@ -1,4 +1,4 @@
-// +build unit_test
+// +build test linux
 
 /*
  * Copyright (C) 2020 Intel Corporation

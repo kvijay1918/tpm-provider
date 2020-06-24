@@ -6,7 +6,7 @@ VERSION := $(or ${GITTAG}, v1.0.0)
 # Use '-gcflags=all="-N -l"' to build debug binaries...
 tpmprovider:
 	export CGO_CFLAGS_ALLOW="-f.*"; \
-	go test -c -o out/tpmprovider.test -tags=unit_test -gcflags=all="-N -l"
+	go test -c -o out/tpmprovider.test -gcflags=all="-N -l"
 
 all: tpmprovider
 

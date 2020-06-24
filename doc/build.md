@@ -1,6 +1,29 @@
 # Build Instructions
 This document contains instructions for using `cicd/Dockerfile` for building `tpm-provider`.  The Docker image created by the Dockerfile is referred to as `gta-devel`.
 
+## Windows Instructions
+Add instructions for building tss2 on Windows
+- Download vs 2019, add clang
+- Open <project dir>/tpm2-tss/tpm2-tss.sln in visual studio
+- Update solution file to build release/x64 and use clang LLVM/correct wdk
+- Build --> .dlls in x64/release subdirectory
+- Copy tss2-sys.dll, tss2-mu.dll and tss2-tcti-tbs.dll to the "<project dir>/out" directory (where tpmprovider.test will be compiled)
+
+Install msys (gcc on Windows)
+- Install file at the top of https://www.msys2.org/ (msys2-x86_64-20200602.exe)
+- Run steps to update msys from website: pacman -Syu, restart msys and then pacman -Su (export http_proxy/https_proxy if things timout)
+- In msys2 prompt, install mingw-gcc compiler: pacman -S mingw-w64-x86_64-gcc
+- Also install make: pacman -S make
+
+Build go…
+- Copy tss2-mu-dll, tss2-sys.dll and tss2-tcti-tbs.dll into tpmprovider/out project directory (will need to make this directory if it doesn't already exist')
+    ==> Consider git submodule in tpm-provider directory
+- Start a mingw64 prompt by double clicking c:\msys64\mingw64.exe
+- Add go to path
+- Run 'make' --> file in/out/tpmprovider.test
+- Run test --> out/tpmprovider.test (use --help to see options)
+
+
 ## Rationale for 'gta-devel' 
 
 The `tpm-provider` currently targets RHEL8.0 and requires `tpm2-tss` and `tpm2-abrmd` to interface with the host's TPM.  Installing those packages on RHEL 8.0 will result in the following vesions of Tss2...
@@ -12,7 +35,7 @@ Due to the dependency on Tss2, any project that includes `tpm-provider` (ex. `go
 
 While developers could build `tpm-provider` on a physical host or vm with the correct versions of Tss2, the documentation in this repository refers to the use Docker and the `gta-devel` image.
 
-# Building tpm-provider
+# Building tpm-provider on Linux
 ## Prerequisites
 * Docker
 * git access to `tpm-provider`
@@ -50,7 +73,7 @@ In order to start the `tpm2-abrmd` service, the docker container must be running
 
     a. `make` and run `out/tpmprovider.test` or...
 
-    b. Run `go test ./... -tags=unit_test`
+    b. Run `go test ./... -tags=test`
 
 ## Starting/Stopping the TPM Simulator
 The unit tests will start and stop (reset) the TPM simulator on each test.  However, the state of the simulator/abrmd can be problematic.  In those scenarios, you may be required to manually start/stop the simulator.

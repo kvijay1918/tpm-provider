@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-#include "tpm20linux.h"
+#include "tpm20.h"
 
 #include <ctype.h>
 
@@ -12,19 +12,19 @@ int InitializeTpmAuth(TPM2B_AUTH* auth, const char* secretKey, size_t secretKeyL
 {
     if(!auth)
     {
-        ERROR("Auth not provided");
+        LOG_ERROR("Auth not provided");
         return -1;
     }
 
     if(!secretKey)
     {
-        ERROR("Null secret key provided");
+        LOG_ERROR("Null secret key provided");
         return -1;
     }
 
     if(secretKeyLength == 0 || secretKeyLength > ARRAY_SIZE(auth->buffer))
     {
-        ERROR("Invalid secret key length: %d", secretKeyLength);
+        LOG_ERROR("Invalid secret key length: %d", secretKeyLength);
         return -1;
     }
 
@@ -76,7 +76,7 @@ int ClearKeyHandle(TSS2_SYS_CONTEXT *sys, TPM2B_AUTH *ownerAuth, TPM_HANDLE keyH
 
     if (ownerAuth == NULL)
     {
-        ERROR("The owner auth must be provided");
+        LOG_ERROR("The owner auth must be provided");
         return -1;
     }
 
@@ -87,7 +87,7 @@ int ClearKeyHandle(TSS2_SYS_CONTEXT *sys, TPM2B_AUTH *ownerAuth, TPM_HANDLE keyH
     rval = Tss2_Sys_EvictControl(sys, TPM2_RH_OWNER, keyHandle, &sessions_data, keyHandle, &sessions_data_out);
     if (rval != TPM2_RC_SUCCESS)
     {
-        ERROR("Key clearing failed. TPM2_EvictControl Error. TPM Error:0x%x", rval);
+        LOG_ERROR("Key clearing failed. TPM2_EvictControl Error. TPM Error:0x%x", rval);
         return rval;
     }
 

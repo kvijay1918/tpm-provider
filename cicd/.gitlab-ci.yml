@@ -33,7 +33,7 @@ test:
     - gta-unit-test
   script:
     - export CGO_CFLAGS_ALLOW="-f.*"
-    - go test ./... -tags=unit_test -coverpkg=./... -coverprofile out/cover.out
+    - go test ./... -coverpkg=./... -coverprofile out/cover.out
     - go tool cover -func out/cover.out
     - go tool cover -html=out/cover.out -o out/cover.html
   artifacts:
