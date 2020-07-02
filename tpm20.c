@@ -12,7 +12,7 @@ tpmCtx* TpmCreate(unsigned int tctiType)
     TSS2_ABI_VERSION abiVersion = {0};
     char* conf = "/dev/tpm0";
 
-    if (tctiType != TCTI_ABRMD && tctiType != TCTI_DEVICE) 
+    if (tctiType != TCTI_ABRMD && tctiType != TCTI_DEVICE && tctiType != TCTI_TBS) 
     {
         LOG_ERROR("Incorrect tcti type: %d\n", tctiType);
         return NULL;

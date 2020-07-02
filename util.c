@@ -16,6 +16,12 @@ int InitializeTpmAuth(TPM2B_AUTH* auth, const char* secretKey, size_t secretKeyL
         return -1;
     }
 
+
+#if defined(WIN32)
+    // On windows, do not provide auth (TODO: this may not work for aik auth)
+    memset(auth->buffer, 0, sizeof(auth->buffer));
+#else
+    // On linux, copy the secret key into the TPM2B_AUTH structure
     if(!secretKey)
     {
         LOG_ERROR("Null secret key provided");
@@ -30,6 +36,7 @@ int InitializeTpmAuth(TPM2B_AUTH* auth, const char* secretKey, size_t secretKeyL
 
     memcpy(auth->buffer, secretKey, secretKeyLength);
     auth->size = secretKeyLength;
+#endif
 
     return 0;
 }
