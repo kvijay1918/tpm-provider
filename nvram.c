@@ -165,12 +165,15 @@ int NvRead(const tpmCtx* ctx,
         return rval;
     }
 
-    rval = GetMaxNvBufferSize(ctx->sys, &maxNvBufferSize);
-    if (rval != TSS2_RC_SUCCESS) 
-    {
-        ERROR("GetMaxNvBufferSize returned error: 0x%x", rval);
-        return rval;
-    }
+    // rval = GetMaxNvBufferSize(ctx->sys, &maxNvBufferSize);
+    // if (rval != TSS2_RC_SUCCESS) 
+    // {
+    //     ERROR("GetMaxNvBufferSize returned error: 0x%x", rval);
+    //     return rval;
+    // }
+
+    // avoid error if data at nvindex > 1024 bytes
+    maxNvBufferSize = 256;
 
     // use the Tss2_Sys_NV_ReadPublic to find the total size of the index
     rval = Tss2_Sys_NV_ReadPublic(ctx->sys, nvIndex, NULL, &nvPublic, &name, NULL);
@@ -222,6 +225,7 @@ int NvRead(const tpmCtx* ctx,
     }
 
     *nvBytesLength = off;
+    DEBUG("Successfully read %x bytes from index %x", off, nvIndex)
 
     return TSS2_RC_SUCCESS;
 }

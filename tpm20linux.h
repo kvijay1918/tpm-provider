@@ -79,7 +79,7 @@
 #define LOG(fmt, ...) fprintf(stdout, "[LOG:%s::%d] " fmt "\n", __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__);
 #define ERROR(fmt, ...) fprintf(stderr, "[ERR:%s::%d] " fmt "\n", __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__);
 
-#define ENABLE_DEBUG_LOGGING 0
+#define ENABLE_DEBUG_LOGGING 1
 #if ENABLE_DEBUG_LOGGING
 #define DEBUG(fmt, ...) fprintf(stdout, "[DBG:%s::%d] " fmt "\n", __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__);
 #else
