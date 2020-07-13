@@ -13,6 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+const (
+	OwnerSecretKey     = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+	AikSecretKey       = "beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"
+	BadSecretKey       = "b000b000b000b000b000b000b000b000b000b000"
+	CertifiedKeySecret = "feedfeedfeedfeedfeedfeedfeedfeedfeedfeed"
+)
+
 func createTestTpm(t *testing.T) TpmProvider {
 	factory, err := NewTpmFactory()
 	if err != nil {
@@ -32,10 +39,10 @@ func TestIsOwnedWithAuthPositive(t *testing.T) {
 	tpm := createTestTpm(t)
 	defer tpm.Close()
 
-	err := tpm.TakeOwnership("p8aV6LoU5uIn2NGhZNWAPq5gGoA=")
+	err := tpm.TakeOwnership(OwnerSecretKey)
 	assert.NoError(t, err)
 
-	owned, err := tpm.IsOwnedWithAuth("p8aV6LoU5uIn2NGhZNWAPq5gGoA=")
+	owned, err := tpm.IsOwnedWithAuth(OwnerSecretKey)
 	assert.NoError(t, err)
 	assert.True(t, owned)
 
@@ -94,11 +101,51 @@ func TestAik(t *testing.T) {
 	tpm := createTestTpm(t)
 	defer tpm.Close()
 
-	err := tpm.CreateAik("", "00000000000000000000")
+	err := tpm.CreateAik(OwnerSecretKey, AikSecretKey)
 	assert.NoError(t, err)
 
 	aikBytes, err := tpm.GetAikBytes()
 	assert.NoError(t, err)
 	assert.NotNil(t, 0, aikBytes)
 	assert.NotEqual(t, 0, len(aikBytes))
+}
+
+func TestGetAikNamePositive(t *testing.T) {
+
+	tpm := createTestTpm(t)
+	defer tpm.Close()
+
+	err := tpm.CreateAik(OwnerSecretKey, AikSecretKey)
+	assert.NoError(t, err)
+
+	output, err := tpm.GetAikName()
+	assert.NoError(t, err)
+	assert.NotEqual(t, len(output), 0)
+
+}
+
+func TestCreatePrimaryHandlePositive(t *testing.T) {
+
+	tpm := createTestTpm(t)
+	assert.NotEqual(t, tpm, nil)
+	defer tpm.Close()
+
+	exists, err := tpm.PublicKeyExists(TPM_HANDLE_PRIMARY)
+	assert.NoError(t, err)
+
+	if exists {
+		err = tpm.ClearPublicKey(OwnerSecretKey, TPM_HANDLE_PRIMARY)
+		if err != nil {
+			t.Fatal("Could not clear public key")
+		}
+	}
+
+	err = tpm.CreatePrimaryHandle(AikSecretKey, TPM_HANDLE_PRIMARY)
+	assert.NoError(t, err)
+
+	err = tpm.ClearPublicKey(OwnerSecretKey, TPM_HANDLE_PRIMARY)
+	if err != nil {
+		t.Fatal("Could not clear public key")
+	}
+
 }

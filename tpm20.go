@@ -544,6 +544,24 @@ func (t *tpm20) createCertifiedKey(keySecret string, aikSecretKey string, keyUsa
 	return nil, fmt.Errorf("CreateCertifiedKey returned error code: %x", rc)
 }
 
+func (t *tpm20) ClearPublicKey(ownerSecretKey string, handle uint32) error {
+
+	ownerSecretKeyBytes, ownerSecretKeyBytesLen, err := validateAndConvertKey(ownerSecretKey)
+	if err != nil {
+		return errors.Wrap(err, INVALID_OWNER_SECRET_KEY)
+	}
+
+	rc := C.ClearPublicKey(t.tpmCtx,
+		ownerSecretKeyBytes,
+		ownerSecretKeyBytesLen, C.uint32_t(handle))
+
+	if rc != 0 {
+		return fmt.Errorf("C.ClearPublicKey returned error code 0x%X", rc)
+	}
+
+	return nil
+}
+
 func (t *tpm20) Unbind(certifiedKey *CertifiedKey, bindingSecretKey string, encryptedData []byte) ([]byte, error) {
 	var returnValue []byte
 	var decryptedBytes *C.uint8_t

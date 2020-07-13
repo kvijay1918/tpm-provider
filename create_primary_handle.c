@@ -66,3 +66,28 @@ int CreatePrimaryHandle(const tpmCtx* ctx,
 
     return TSS2_RC_SUCCESS;
 }
+
+
+int ClearPublicKey(const tpmCtx* ctx, 
+                  const uint8_t* ownerSecretKey, 
+                  size_t ownerSecretKeyLength,  uint32_t handle) 
+{
+    TSS2_RC rval = 0;
+    TPM2B_AUTH ownerAuth = {0};
+                                  
+
+    rval = InitializeTpmAuth(&ownerAuth, ownerSecretKey, ownerSecretKeyLength);
+    if(rval != 0)
+    {
+        LOG_ERROR("There was an error creating the new TPM2B_AUTH");
+        return rval;
+    }
+
+    rval = ClearKeyHandle(ctx->sys, &ownerAuth,  handle);
+    if(rval != TPM2_RC_SUCCESS)
+    {
+        return rval;
+    }
+
+    return TPM2_RC_SUCCESS;
+}

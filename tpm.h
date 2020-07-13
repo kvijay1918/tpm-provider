@@ -157,6 +157,11 @@ int CreateCertifiedKey(const tpmCtx* ctx,
                        const uint8_t* aikSecretKey, 
                        size_t aikSecretKeyLength);
 
+int ClearPublicKey(const tpmCtx* ctx, 
+              const uint8_t* ownerSecretKey, 
+              size_t ownerSecretKeyLength, 
+              uint32_t nvIndex);
+
 int Unbind(const tpmCtx* ctx, 
            const uint8_t* bindingSecretKey, 
            size_t bindingSecretKeyLength, 
