@@ -8,5 +8,4 @@ NVChip*
 *.pem
 *.crt
 *.dll
-tpm2-tss/
 *.vs
