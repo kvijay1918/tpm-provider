@@ -6,7 +6,6 @@
 package tpmprovider
 
 import (
-	"errors"
 	"runtime"
 )
 
@@ -26,19 +25,20 @@ type TpmFactory interface {
 // Creates the default TpmFactory that currently uses TSS2 and 'abrmd'.
 //
 func NewTpmFactory() (TpmFactory, error) {
-	if runtime.GOOS == "linux" {
-		return &tpmFactory{tctiType : TCTI_ABRMD}, nil
-	} else if runtime.GOOS == "windows" {
-		return &tpmFactory{tctiType : TCTI_TBS}, nil
+	if runtime.GOOS == GOOS_LINUX {
+		return &tpmFactory{tctiType: TCTI_ABRMD}, nil
+	} else if runtime.GOOS == GOOS_WINDOWS {
+		return &tpmFactory{tctiType: TCTI_TBS}, nil
 	} else {
-		return nil, errors.New("Unsupported tpm factory platform " + runtime.GOOS)
+		return nil, &UnsupportGOOSError{}
 	}
 }
 
 func NewTpmDeviceFactory() (TpmFactory, error) {
-	if runtime.GOOS == "linux" {
-		return &tpmFactory{tctiType : TCTI_DEVICE}, nil
+	if runtime.GOOS == GOOS_LINUX {
+		return &tpmFactory{tctiType: TCTI_DEVICE}, nil
 	} else {
-		return nil, errors.New("Unsupported tpm factory platform " + runtime.GOOS)
+		return nil, &UnsupportGOOSError{}
+
 	}
 }

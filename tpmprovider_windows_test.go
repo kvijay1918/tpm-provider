@@ -39,9 +39,13 @@ func TestIsOwnedWithAuthPositive(t *testing.T) {
 	tpm := createTestTpm(t)
 	defer tpm.Close()
 
+	// We expect that TakeOwnership will return an error on Windows
+	// as a way to indicate to callers that this is not needed.
 	err := tpm.TakeOwnership(OwnerSecretKey)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 
+	// We expect that IsOwnedWithAuth will always be true since owner auth
+	// is not used in Windows.
 	owned, err := tpm.IsOwnedWithAuth(OwnerSecretKey)
 	assert.NoError(t, err)
 	assert.True(t, owned)
@@ -63,7 +67,6 @@ func TestNvRam(t *testing.T) {
 	tpm := createTestTpm(t)
 	defer tpm.Close()
 
-	//ownerAuth := "Pldh0ylDEX0TnPnbcIMKlKlPSNI="
 	ownerAuth := ""
 
 	// define/read/write/delete some data in nvram
@@ -80,19 +83,19 @@ func TestNvRam(t *testing.T) {
 		}
 	}
 
-	err = tpm.NvDefine(ownerAuth, idx, uint16(len(data)))
+	err = tpm.NvDefine(OwnerSecretKey, idx, uint16(len(data)))
 	assert.NoError(t, err)
 
-	err = tpm.NvWrite(ownerAuth, idx, data)
+	err = tpm.NvWrite(OwnerSecretKey, idx, data)
 	assert.NoError(t, err)
 
-	output, err := tpm.NvRead(ownerAuth, idx)
+	output, err := tpm.NvRead(OwnerSecretKey, idx)
 	assert.NoError(t, err)
 	assert.Equal(t, data, output)
 
 	t.Logf("Read: %s", hex.EncodeToString(output))
 
-	err = tpm.NvRelease(ownerAuth, idx)
+	err = tpm.NvRelease(OwnerSecretKey, idx)
 	assert.NoError(t, err)
 }
 

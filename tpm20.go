@@ -43,7 +43,6 @@ type tpmFactory struct {
 var log = commLog.GetDefaultLogger()
 
 const (
-	WINDOWS                  = "windows"
 	INVALID_OWNER_SECRET_KEY = "Invalid owner secret key"
 	INVALID_AIK_SECRET_KEY   = "Invalid aik secret key"
 )
@@ -75,10 +74,12 @@ func (t *tpm20) Version() C.TPM_VERSION {
 
 func (t *tpm20) TakeOwnership(ownerSecretKey string) error {
 
-	if runtime.GOOS == WINDOWS {
-		log.Info("TakeOwnership is not applicable on Windows")
-		return nil
+	if runtime.GOOS == GOOS_WINDOWS {
+		return errors.New("TakeOwnership is not applicable to Windows")
+	} else if runtime.GOOS != GOOS_LINUX {
+		return &UnsupportGOOSError{}
 	}
+
 	ownerSecretKeyBytes, ownerSecretKeyBytesLen, err := validateAndConvertKey(ownerSecretKey)
 	if err != nil {
 		return errors.Wrap(err, INVALID_OWNER_SECRET_KEY)
@@ -96,9 +97,13 @@ func (t *tpm20) TakeOwnership(ownerSecretKey string) error {
 
 func (t *tpm20) IsOwnedWithAuth(ownerSecretKey string) (bool, error) {
 
-	if runtime.GOOS == WINDOWS {
+	// On windows with TBS, since no auth is required, assume that is owned will
+	// be true and just log a debug message.
+	if runtime.GOOS == GOOS_WINDOWS {
 		log.Debug("Windows does not requires owner auth")
 		return true, nil
+	} else if runtime.GOOS != GOOS_LINUX {
+		return false, &UnsupportGOOSError{}
 	}
 
 	ownerSecretKeyBytes, ownerSecretKeyBytesLen, err := validateAndConvertKey(ownerSecretKey)
@@ -661,9 +666,9 @@ func validateAndConvertKey(key string) (*C.uint8_t, C.size_t, error) {
 	// On Windows, just return an null pointer and length '0'.  Otherwise,
 	// on Linux, convert the hex string from the config.yaml to bytes and
 	// return its pointer/length.
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == GOOS_WINDOWS {
 		results = (*C.uint8_t)(nil)
-	} else if runtime.GOOS == "linux" {
+	} else if runtime.GOOS == GOOS_LINUX {
 
 		if key == "" {
 			return nil, length, errors.New("The secret key cannot be empty")
@@ -684,6 +689,8 @@ func validateAndConvertKey(key string) (*C.uint8_t, C.size_t, error) {
 
 		results = (*C.uint8_t)(unsafe.Pointer(&keyBytes[0]))
 		length = C.size_t(len(keyBytes))
+	} else {
+		return nil, 0, &UnsupportGOOSError{}
 	}
 
 	return results, length, nil

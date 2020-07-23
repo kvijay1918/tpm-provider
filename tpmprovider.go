@@ -6,6 +6,7 @@ package tpmprovider
 
 // #include "tpm.h"
 import "C"
+import "runtime"
 
 type CertifiedKey struct {
 	Version        int
@@ -35,6 +36,9 @@ const (
 	TCTI_ABRMD  = C.TCTI_ABRMD
 	TCTI_DEVICE = C.TCTI_DEVICE
 	TCTI_TBS    = C.TCTI_TBS
+
+	GOOS_WINDOWS = "windows"
+	GOOS_LINUX   = "linux"
 )
 
 type TpmProvider interface {
@@ -151,4 +155,10 @@ type TpmProvider interface {
 	// Checks if a primary key in the TPM exists at 'handle'.
 	//
 	PublicKeyExists(handle uint32) (bool, error)
+}
+
+type UnsupportGOOSError struct{}
+
+func (e *UnsupportGOOSError) Error() string {
+	return "Unsupported GOOS: " + runtime.GOOS
 }
