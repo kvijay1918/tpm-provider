@@ -145,4 +145,7 @@ type TpmProvider interface {
 	// Checks if a primary key in the TPM exists at 'handle'.
 	//
 	PublicKeyExists(handle uint32) (bool, error)
+
+	ReadPublic(handle uint32) ([]byte, error)
+
 }

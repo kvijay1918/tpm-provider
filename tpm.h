@@ -181,4 +181,9 @@ int Sign(const tpmCtx* ctx,
 
 int PublicKeyExists(const tpmCtx* ctx, 
                     uint32_t handle);
+
+int ReadPublic(const tpmCtx* ctx, 
+                uint32_t handle,
+                uint8_t** const publicBytes, 
+                int* const publicBytesLength);
 #endif

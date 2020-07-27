@@ -608,6 +608,30 @@ func (tpm *tpm20Linux) PublicKeyExists(handle uint32) (bool, error) {
 	return true, nil
 }
 
+func (t *tpm20Linux) ReadPublic(handle uint32) ([]byte, error) {
+	var returnValue []byte
+	var publicBytes *C.uint8_t
+	var publicBytesLength C.int
+
+	rc := C.ReadPublic(t.tpmCtx,
+						C.uint(handle),
+						&publicBytes, 
+						&publicBytesLength)
+
+	if rc != 0 {
+		return nil, fmt.Errorf("ReadPublic returned error code 0x%X", rc)
+	}
+
+	defer C.free(unsafe.Pointer(publicBytes))
+
+	if publicBytesLength <= 0 {
+		return nil, fmt.Errorf("The buffer size is incorrect")
+	}
+
+	returnValue = C.GoBytes(unsafe.Pointer(publicBytes), publicBytesLength)
+	return returnValue, nil
+}
+
 func validateAndConvertKey(key string) ([]byte, error) {
 	if key == "" {
 		return nil, errors.New("The secret key cannot be empty")

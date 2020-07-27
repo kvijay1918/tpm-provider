@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include "tpm20linux.h"
+#include <tss2/tss2_mu.h>
 
 //-------------------------------------------------------------------------------------------------
 // G E T   P U B   A K
@@ -198,7 +199,7 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
 // G E T   P U B   E K
 // from https://github.com/tpm2-software/tpm2-tools/blob/3.1.0/tools/tpm2_getpubek.c
 //-------------------------------------------------------------------------------------------------
-static int getpubek(TSS2_SYS_CONTEXT *sys, 
+static int getpubek(const tpmCtx* ctx, 
                     TPM2B_AUTH* secretKey) 
 {
     TSS2_RC                 rval;
@@ -233,44 +234,110 @@ static int getpubek(TSS2_SYS_CONTEXT *sys,
     inSensitive.size = inSensitive.sensitive.userAuth.size + 2;
 
     {
+        uint8_t* nvBytes;
+        int nvLen;
+
+        rval = NvRead(ctx, (uint8_t*)secretKey->buffer, secretKey->size, 0x1c00004, &nvBytes, &nvLen);
+        if (rval != TPM2_RC_SUCCESS) 
+        {
+            ERROR("NvRead Error. TPM Error:0x%x", rval);
+            if (nvBytes)
+            {
+                free(nvBytes);
+            }
+
+            return rval;
+        }
+
+
+        rval = Tss2_MU_TPMT_PUBLIC_Unmarshal(nvBytes, nvLen, 0, &inPublic.publicArea);
+        free(nvBytes);
+
+        rval = NvRead(ctx, (uint8_t*)secretKey->buffer, secretKey->size, 0x1c00003, &nvBytes, &nvLen);
+        if (rval != TPM2_RC_SUCCESS) 
+        {
+            ERROR("NvRead Error. TPM Error:0x%x", rval);
+            if (nvBytes)
+            {
+                free(nvBytes);
+            }
+
+            return rval;
+        }
+
+
+        memset(&inPublic.publicArea.unique, 0, sizeof(inPublic.publicArea.unique));
+        memcpy(&inPublic.publicArea.unique.rsa.buffer, nvBytes, nvLen);
+//        inPublic.publicArea.unique.rsa.size = 256;
+        inPublic.publicArea.unique.rsa.size = 256;
+        free(nvBytes);
+
+        // DEBUG("Unique len: %x", sizeof(inPublic.publicArea.unique.rsa.buffer));
+        // DEBUG("Nonce len: %x", nvLen);
+
+        DEBUG("PA Type: %d", inPublic.publicArea.type);
+        DEBUG("PA Alg:  %x", inPublic.publicArea.nameAlg);
+        DEBUG("PA Attr: %x", inPublic.publicArea.objectAttributes);
+        DEBUG("PA auth size: %x", inPublic.publicArea.authPolicy.size);
+        DEBUG("Sym Algo: %x", inPublic.publicArea.parameters.rsaDetail.symmetric.algorithm);
+        DEBUG("Sym Keybits: %x", inPublic.publicArea.parameters.rsaDetail.symmetric.keyBits);
+        DEBUG("Sym mode: %x", inPublic.publicArea.parameters.rsaDetail.symmetric.mode);
+        DEBUG("Scheme: %x", inPublic.publicArea.parameters.rsaDetail.scheme.scheme);
+        DEBUG("PA Keybits: %x", inPublic.publicArea.parameters.rsaDetail.keyBits);
+        DEBUG("PA exponent: %x", inPublic.publicArea.parameters.rsaDetail.exponent);
+
+
+
+
+
+
         // from set_key_algorithm
 
-        static BYTE auth_policy[] = {
-                0x83, 0x71, 0x97, 0x67, 0x44, 0x84, 0xB3, 0xF8, 0x1A, 0x90, 0xCC,
-                0x8D, 0x46, 0xA5, 0xD7, 0x24, 0xFD, 0x52, 0xD7, 0x6E, 0x06, 0x52,
-                0x0B, 0x64, 0xF2, 0xA1, 0xDA, 0x1B, 0x33, 0x14, 0x69, 0xAA
-        };
+        // static BYTE auth_policy[] = {
+        //         0x83, 0x71, 0x97, 0x67, 0x44, 0x84, 0xB3, 0xF8, 0x1A, 0x90, 0xCC,
+        //         0x8D, 0x46, 0xA5, 0xD7, 0x24, 0xFD, 0x52, 0xD7, 0x6E, 0x06, 0x52,
+        //         0x0B, 0x64, 0xF2, 0xA1, 0xDA, 0x1B, 0x33, 0x14, 0x69, 0xAA
+        // };
 
-        inPublic.publicArea.nameAlg = TPM2_ALG_SHA256;
+//        inPublic.publicArea.nameAlg = TPM2_ALG_SHA256;
 
-        // First clear attributes bit field.
-        inPublic.publicArea.objectAttributes = 0;
-        inPublic.publicArea.objectAttributes |= TPMA_OBJECT_RESTRICTED;
-        inPublic.publicArea.objectAttributes &= ~TPMA_OBJECT_USERWITHAUTH;
-        inPublic.publicArea.objectAttributes |= TPMA_OBJECT_ADMINWITHPOLICY;
-        inPublic.publicArea.objectAttributes &= ~TPMA_OBJECT_SIGN_ENCRYPT;
-        inPublic.publicArea.objectAttributes |= TPMA_OBJECT_DECRYPT;
-        inPublic.publicArea.objectAttributes |= TPMA_OBJECT_FIXEDTPM;
-        inPublic.publicArea.objectAttributes |= TPMA_OBJECT_FIXEDPARENT;
-        inPublic.publicArea.objectAttributes |= TPMA_OBJECT_SENSITIVEDATAORIGIN;
-        inPublic.publicArea.authPolicy.size = ARRAY_SIZE(auth_policy);
-        memcpy(inPublic.publicArea.authPolicy.buffer, auth_policy, ARRAY_SIZE(auth_policy));
+        // // First clear attributes bit field.
+        // inPublic.publicArea.objectAttributes = 0;
+        // inPublic.publicArea.objectAttributes |= TPMA_OBJECT_RESTRICTED;
+        // inPublic.publicArea.objectAttributes &= ~TPMA_OBJECT_USERWITHAUTH;
+        // inPublic.publicArea.objectAttributes |= TPMA_OBJECT_ADMINWITHPOLICY;
+        // inPublic.publicArea.objectAttributes &= ~TPMA_OBJECT_SIGN_ENCRYPT;
+        // inPublic.publicArea.objectAttributes |= TPMA_OBJECT_DECRYPT;
+        // inPublic.publicArea.objectAttributes |= TPMA_OBJECT_FIXEDTPM;
+        // inPublic.publicArea.objectAttributes |= TPMA_OBJECT_FIXEDPARENT;
+        // inPublic.publicArea.objectAttributes |= TPMA_OBJECT_SENSITIVEDATAORIGIN;
+        // inPublic.publicArea.authPolicy.size = ARRAY_SIZE(auth_policy);
+        // memcpy(inPublic.publicArea.authPolicy.buffer, auth_policy, ARRAY_SIZE(auth_policy));
 
-        inPublic.publicArea.type = TPM2_ALG_RSA; // 0x1 from command line
+        // // inPublic.publicArea.type = TPM2_ALG_RSA; // 0x1 from command line
+        // // inPublic.publicArea.parameters.rsaDetail.symmetric.algorithm = TPM2_ALG_AES;
+        // // inPublic.publicArea.parameters.rsaDetail.symmetric.keyBits.aes = 128;
+        // // inPublic.publicArea.parameters.rsaDetail.symmetric.mode.aes = TPM2_ALG_CFB;
+        // // inPublic.publicArea.parameters.rsaDetail.scheme.scheme = TPM2_ALG_NULL;
+        // // inPublic.publicArea.parameters.rsaDetail.keyBits = 2048;
+        // // inPublic.publicArea.parameters.rsaDetail.exponent = 0;
+        // // inPublic.publicArea.unique.rsa.size = 256;
 
-        inPublic.publicArea.parameters.rsaDetail.symmetric.algorithm = TPM2_ALG_AES;
-        inPublic.publicArea.parameters.rsaDetail.symmetric.keyBits.aes = 128;
-        inPublic.publicArea.parameters.rsaDetail.symmetric.mode.aes = TPM2_ALG_CFB;
-        inPublic.publicArea.parameters.rsaDetail.scheme.scheme = TPM2_ALG_NULL;
-        inPublic.publicArea.parameters.rsaDetail.keyBits = 2048;
-        inPublic.publicArea.parameters.rsaDetail.exponent = 0;
-        inPublic.publicArea.unique.rsa.size = 256;
+        // inPublic.publicArea.type = TPM2_ALG_ECC ;
+        // inPublic.publicArea.parameters.eccDetail.symmetric.algorithm = TPM2_ALG_AES;
+        // inPublic.publicArea.parameters.eccDetail.symmetric.keyBits.aes = 128;
+        // inPublic.publicArea.parameters.eccDetail.symmetric.mode.sym = TPM2_ALG_CFB;
+        // inPublic.publicArea.parameters.eccDetail.scheme.scheme = TPM2_ALG_NULL;
+        // inPublic.publicArea.parameters.eccDetail.curveID = TPM2_ECC_NIST_P256;
+        // inPublic.publicArea.parameters.eccDetail.kdf.scheme = TPM2_ALG_NULL;
+        // inPublic.publicArea.unique.ecc.x.size = 32;
+        // inPublic.publicArea.unique.ecc.y.size = 32;
     }
 
     creationPCR.count = 0;
 
     /* Create EK and get a handle to the key */
-    rval = Tss2_Sys_CreatePrimary(sys, TPM2_RH_ENDORSEMENT, 
+    rval = Tss2_Sys_CreatePrimary(ctx->sys, TPM2_RH_ENDORSEMENT, 
             &sessionsData, &inSensitive, &inPublic, &outsideInfo, &creationPCR,
             &handle2048ek, &outPublic, &creationData, &creationHash,
             &creationTicket, &name, &sessionsDataOut);
@@ -285,7 +352,7 @@ static int getpubek(TSS2_SYS_CONTEXT *sys,
 
     memcpy(&sessionsData.auths[0].hmac, secretKey, sizeof(TPM2B_AUTH));
 
-    rval = Tss2_Sys_EvictControl(sys, TPM2_RH_OWNER, handle2048ek, &sessionsData, TPM_HANDLE_EK_CERT, &sessionsDataOut);
+    rval = Tss2_Sys_EvictControl(ctx->sys, TPM2_RH_OWNER, handle2048ek, &sessionsData, TPM_HANDLE_EK_CERT, &sessionsDataOut);
     if (rval != TPM2_RC_SUCCESS) 
     {
         ERROR("EvictControl failed. Could not make EK persistent. TPM Error:0x%x", rval);
@@ -294,7 +361,7 @@ static int getpubek(TSS2_SYS_CONTEXT *sys,
 
     DEBUG("EvictControl EK persistent success.");
 
-    rval = Tss2_Sys_FlushContext(sys, handle2048ek);
+    rval = Tss2_Sys_FlushContext(ctx->sys, handle2048ek);
     if (rval != TPM2_RC_SUCCESS)
     {
         ERROR("Flush transient EK failed. TPM Error:0x%x", rval);
@@ -346,7 +413,7 @@ int CreateAik(const tpmCtx* ctx,
     //
     if(PublicKeyExists(ctx, TPM_HANDLE_EK_CERT) != 0)
     {
-        rval = getpubek(ctx->sys, &ownerAuth);
+        rval = getpubek(ctx, &ownerAuth);
         if(rval != TPM2_RC_SUCCESS)
         {
             return rval;
