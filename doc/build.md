@@ -1,7 +1,7 @@
 # Build Instructions
 This document contains instructions for using `cicd/Dockerfile` for building `tpm-provider`.  The Docker image created by the Dockerfile is referred to as `tpm-devel`.
 
-## Rationale for 'tpm-devel' 
+## Rationale for 'tpm-devel'
 
 The `tpm-provider` currently targets RHEL8.0 and requires `tpm2-tss` and `tpm2-abrmd` to interface with the host's TPM.  Installing those packages on RHEL 8.0 will result in the following vesions of Tss2...
 
@@ -36,6 +36,21 @@ Currently, `tpm-provider` will be statically linked into go applications (ex. `g
     3. `cd /docker_host/tpm-provider`
     4. `make`
     5. `out/tpmprovider-test` executable is compiled.  All unit tests can be invoked by running `out/tmpprovider.test` or individually by running `out/tpmprovider.test -test.run TestName`.
+
+### Compiling tpm-provider with les settings in container
+
+Run a container from `tpm-devel` image, pass in git configure on host and mount current directory to `docker_host`
+```shell
+ docker run -v `pwd`:/docker_host -v ~/.ssh:/root/.ssh -v ~/.gitconfig:/root/.gitconfig -it --rm gta-devel /bin/bash
+```
+
+This configuration will work if the host on which building is done can correctly connect to intel hosted gitlab.
+Following steps in container is identical.
+
+```shell
+cd /docker_host/tpm-provider
+make
+```
 
 # Unit Testing and Tpm Simulator
 The `tpm-devel` docker image also contains the Microsoft TPM simulator to support debugging and unit tests.
