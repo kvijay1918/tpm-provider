@@ -37,7 +37,7 @@ Currently, `tpm-provider` will be statically linked into go applications (ex. `g
     4. `make`
     5. `out/tpmprovider-test` executable is compiled.  All unit tests can be invoked by running `out/tmpprovider.test` or individually by running `out/tpmprovider.test -test.run TestName`.
 
-### Compiling tpm-provider with les settings in container
+### Compiling tpm-provider with less settings in container
 
 Run a container from `tpm-devel` image, pass in git configure on host and mount current directory to `docker_host`
 ```shell
