@@ -41,7 +41,7 @@ Currently, `tpm-provider` will be statically linked into go applications (ex. `g
 
 Run a container from `tpm-devel` image, pass in git configure on host and mount current directory to `docker_host`
 ```shell
- docker run -v `pwd`:/docker_host -v ~/.ssh:/root/.ssh -v ~/.gitconfig:/root/.gitconfig -it --rm gta-devel /bin/bash
+docker run -v `pwd`:/docker_host -v ~/.ssh:/root/.ssh -v ~/.gitconfig:/root/.gitconfig -it --rm tpm-devel /bin/bash
 ```
 
 This configuration will work if the host on which building is done can correctly connect to intel hosted gitlab.
