@@ -30,7 +30,7 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
     if (tctiType == TCTI_DEVICE) 
     {
         if (tss2Conf == NULL) {
-            tss2Conf = "/dev/tpm0";
+            tss2Conf = "/dev/tpmrm0";
         }
 
         rc = Tss2_Tcti_Device_Init (NULL, &size, NULL);
