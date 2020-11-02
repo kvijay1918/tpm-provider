@@ -33,6 +33,7 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
             tss2Conf = "/dev/tpmrm0";
         }
 
+        DEBUG("Creating TCTI 'Device'");
         rc = Tss2_Tcti_Device_Init (NULL, &size, NULL);
     }
     else if (tctiType == TCTI_MSSIM)
@@ -41,38 +42,42 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
             tss2Conf = "host=localhost,port=2321";
         }
 
+        DEBUG("Creating TCTI 'MMSIM'");
         Tss2_Tcti_Mssim_Init(NULL, &size, NULL);
     }
     else
     {
+        DEBUG("Creating TCTI 'ABRMD'");
         rc = Tss2_Tcti_Tabrmd_Init(NULL, &size, NULL);
     }
     
     if (rc != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Tcti_Tabrmd_Init return %d\n", rc);
+        ERROR("TCTI init return %d", rc);
         free(ctx);
         return NULL;
     }
+
+    DEBUG("Using TCTI conf '%s", tss2Conf)
 
     ctx->tcti = (TSS2_TCTI_CONTEXT*)calloc(1, size);
 
     if (tctiType == TCTI_DEVICE) 
     {
-        rc = Tss2_Tcti_Device_Init(ctx->tcti, &size, conf);
+        rc = Tss2_Tcti_Device_Init(ctx->tcti, &size, tss2Conf);
     }
     else if (tctiType == TCTI_MSSIM)
     {
-        Tss2_Tcti_Mssim_Init(ctx->tcti, &size, conf);
+        Tss2_Tcti_Mssim_Init(ctx->tcti, &size, tss2Conf);
     }
     else 
     {
-        rc = Tss2_Tcti_Tabrmd_Init(ctx->tcti, &size, conf);
+        rc = Tss2_Tcti_Tabrmd_Init(ctx->tcti, &size, tss2Conf);
     }
 
     if (rc != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tcti_Init returned %d\n", rc);
+        ERROR("Tcti_Init returned %d", rc);
         free(ctx);
         return NULL;
     }
