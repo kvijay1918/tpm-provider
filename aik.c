@@ -234,7 +234,7 @@ int CreateAik(const tpmCtx* ctx,
     //
     if (PublicKeyExists(ctx, TPM_HANDLE_AIK) == 0)
     {
-        DEBUG("The AIK handle at %x already exists. Clearing the existing handle", TPM_HANDLE_AIK);
+        DEBUG("The AIK handle at 0x%x already exists. Clearing the existing handle", TPM_HANDLE_AIK);
 
         // Clear the existing provisioned AIK
         rval = ClearKeyHandle(ctx->sys, &ownerAuth, TPM_HANDLE_AIK);
@@ -273,7 +273,7 @@ int GetAikName(const tpmCtx* ctx,
 
     if (name.size == 0 || name.size > ARRAY_SIZE(name.name))
     {
-        ERROR("Invalid aik name length: %x", name.size)
+        ERROR("Invalid aik name length: 0x%x", name.size)
         return -1;
     }
 
@@ -308,7 +308,7 @@ int GetAikBytes(const tpmCtx* ctx,
 
     if(aikPublic.publicArea.unique.rsa.size == 0 || aikPublic.publicArea.unique.rsa.size > ARRAY_SIZE(aikPublic.publicArea.unique.rsa.buffer))
     {
-        ERROR("Incorrect aik buffer length %x", aikPublic.publicArea.unique.rsa.size);
+        ERROR("Incorrect aik buffer length 0x%x", aikPublic.publicArea.unique.rsa.size);
         return -1;   
     }
 

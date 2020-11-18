@@ -51,7 +51,7 @@ int Unbind(const tpmCtx* ctx,
 
     if (bindingSecretKeyLength == 0 || bindingSecretKeyLength > BUFFER_SIZE(TPM2B_AUTH, buffer))
     {
-        ERROR("Invalid key secret length: %x", bindingSecretKeyLength)
+        ERROR("Invalid key secret length: 0x%lx", bindingSecretKeyLength)
         return -1;
     }
 
@@ -75,7 +75,7 @@ int Unbind(const tpmCtx* ctx,
 
     if (encryptedBytesLength == 0 || encryptedBytesLength > BUFFER_SIZE(TPM2B_PUBLIC_KEY_RSA, buffer))
     {
-        ERROR("Invalid encrypted bytes length: %x", encryptedBytesLength);
+        ERROR("Invalid encrypted bytes length: 0x%lx", encryptedBytesLength);
         return -1;
     }
 
@@ -95,7 +95,7 @@ int Unbind(const tpmCtx* ctx,
     // Setup parameters and call Tss2_Sys_Load
     //---------------------------------------------------------------------------------------------
     offset = 0;
-    DEBUG("==> publicKeyBytesLength: %x", publicKeyBytesLength);
+    DEBUG("==> publicKeyBytesLength: 0x%x", publicKeyBytesLength);
     rval = Tss2_MU_TPM2B_PUBLIC_Unmarshal(publicKeyBytes, publicKeyBytesLength, &offset, &inPublic);
     if (rval != TSS2_RC_SUCCESS)
     {
@@ -104,7 +104,7 @@ int Unbind(const tpmCtx* ctx,
     }
 
     offset = 0;
-    DEBUG("==> privateKeyBytesLength: %x", privateKeyBytesLength);
+    DEBUG("==> privateKeyBytesLength: 0x%x", privateKeyBytesLength);
     rval = Tss2_MU_TPM2B_PRIVATE_Unmarshal(privateKeyBytes, privateKeyBytesLength, &offset, &inPrivate);
     if (rval != TSS2_RC_SUCCESS)
     {
@@ -132,7 +132,7 @@ int Unbind(const tpmCtx* ctx,
         return rval;
     }
 
-    DEBUG("==> bindingKeyHandle: %x", bindingKeyHandle)
+    DEBUG("==> bindingKeyHandle: 0x%x", bindingKeyHandle)
 
     //---------------------------------------------------------------------------------------------
     // Setup parameters and call Tss2_Sys_RSA_Decrypt
@@ -147,7 +147,7 @@ int Unbind(const tpmCtx* ctx,
     }
 
     // encrypted data
-    DEBUG("==> encryptedBytesLength: %x", encryptedBytesLength);
+    DEBUG("==> encryptedBytesLength: 0x%x", encryptedBytesLength);
     cipherText.size = encryptedBytesLength;
     memcpy(cipherText.buffer, encryptedBytes, encryptedBytesLength);
 
@@ -180,7 +180,7 @@ int Unbind(const tpmCtx* ctx,
     //---------------------------------------------------------------------------------------------
     if (message.size == 0 || message.size > BUFFER_SIZE(TPM2B_PUBLIC_KEY_RSA, buffer)) 
     {
-        ERROR("Invalid message size: %x", message.size)
+        ERROR("Invalid message size: 0x%x", message.size)
         return -1;
     }
     

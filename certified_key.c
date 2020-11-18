@@ -59,7 +59,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
 
     if (ownerSecretKeyLength == 0 || ownerSecretKeyLength > BUFFER_SIZE(TPM2B_AUTH, buffer))
     {
-        ERROR("The owner secret key length is incorrect: %x", ownerSecretKeyLength);
+        ERROR("The owner secret key length is incorrect: 0x%lx", ownerSecretKeyLength);
         return -1;
     }
 
@@ -71,7 +71,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
 
     if (aikSecretKeyLength == 0 || aikSecretKeyLength > BUFFER_SIZE(TPM2B_AUTH, buffer))
     {
-        ERROR("The aik secret key length is incorrect: %x", aikSecretKeyLength);
+        ERROR("The aik secret key length is incorrect: 0x%lx", aikSecretKeyLength);
         return -1;
     }
 
@@ -82,7 +82,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
     rval = PublicKeyExists(ctx, TPM_HANDLE_PRIMARY);
     if(rval == -1)
     {
-        ERROR("The public key at %x does not exists", TPM_HANDLE_PRIMARY);
+        ERROR("The public key at 0x%x does not exists", TPM_HANDLE_PRIMARY);
         return -1;
     }
 

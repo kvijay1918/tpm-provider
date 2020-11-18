@@ -30,21 +30,21 @@ static int GetEkCertificatePublicBytesRSA(const tpmCtx* ctx, TPM2B_AUTH *ownerAu
     ekCert = d2i_X509(NULL, &tmp, nvLength);
     if (ekCert == NULL)
     {
-        ERROR("Could not parse the EK Certificate at index %x", ekCertIndex)
+        ERROR("Could not parse the EK Certificate at index 0x%x", ekCertIndex)
         goto error;
     }
 
     ekPub = X509_get_pubkey(ekCert);
     if (!ekPub)
     {
-        ERROR("Failed to retrieve the EK public key from the EK Certificate at index %x", ekCertIndex)
+        ERROR("Failed to retrieve the EK public key from the EK Certificate at index 0x%x", ekCertIndex)
         goto error;
     }
 
     rsaPub = EVP_PKEY_get1_RSA(ekPub);
     if (!rsaPub) 
     {
-        ERROR("Failed to retrieve the RSA public key from the EK Certificate at index %x", ekCertIndex)
+        ERROR("Failed to retrieve the RSA public key from the EK Certificate at index 0x%x", ekCertIndex)
         goto error;
     }
 
@@ -53,7 +53,7 @@ static int GetEkCertificatePublicBytesRSA(const tpmCtx* ctx, TPM2B_AUTH *ownerAu
     len = BN_num_bytes(n);
     if (len < 20 || len > 4096) // assume between SHA1 (20) and sha512 (4096) bytes
     {
-        ERROR("Invalid public key length: %x", len)
+        ERROR("Invalid public key length: 0x%x", len)
         goto error;
     }
 

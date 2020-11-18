@@ -168,7 +168,7 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
             pcrSize = 64;
             break;
         default:
-            ERROR("Unknown pcr selection hash: %x", pcrSelection->pcrSelections[i].hash);
+            ERROR("Unknown pcr selection hash: 0x%x", pcrSelection->pcrSelections[i].hash);
             return -1;
         }        
 
@@ -181,7 +181,7 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
             int mask = 1 << j;
             if ((pcrSelectBitMask & mask) == mask)
             {
-                DEBUG("SELECTED PCR: %d, %d, %x", j, pcrSize, bufferSize);
+                DEBUG("SELECTED PCR: %d, %d, 0x%x", j, pcrSize, bufferSize);
                 bufferSize += pcrSize;
             }
         }
@@ -244,7 +244,7 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
             }
             else
             {
-                ERROR("Invalid pcr measurement size %x at measurement %d, digest %d", pcrMeasurements[i].digests[j].size, i, j);
+                ERROR("Invalid pcr measurement size 0x%x at measurement %d, digest %d", pcrMeasurements[i].digests[j].size, i, j);
                 return -1;
             }
         }
@@ -317,14 +317,14 @@ int GetTpmQuote(const tpmCtx* ctx,
     // validate the quote data returned from getQuote
     if(quote.size == 0 || quote.size > ARRAY_SIZE(quote.attestationData)) 
     {
-         ERROR("Incorrect quote buffer size: x", quote.size)
+         ERROR("Incorrect quote buffer size: 0x%x", quote.size)
          return -1;   
     }
 
     // validate the signature data returned from getQuote
     if(signature.signature.rsassa.sig.size == 0 || signature.signature.rsassa.sig.size > ARRAY_SIZE(signature.signature.rsassa.sig.buffer)) 
     {
-         ERROR("Incorrect signature buffer size: x", signature.signature.rsassa.sig.size)
+         ERROR("Incorrect signature buffer size: 0x%x", signature.signature.rsassa.sig.size)
          return -1;   
     }
 
@@ -344,7 +344,7 @@ int GetTpmQuote(const tpmCtx* ctx,
     // validate the number or pcrs collected from getPcrs
     if (pcrsCollectedCount <=0 || pcrsCollectedCount > 24)
     {
-         ERROR("Unexpected amount of pcrs collected: x", pcrsCollectedCount)
+         ERROR("Unexpected amount of pcrs collected: 0x%lx", pcrsCollectedCount)
          return -1;   
     }
 

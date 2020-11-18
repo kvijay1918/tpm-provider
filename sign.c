@@ -48,7 +48,7 @@ int Sign(const tpmCtx* ctx,
 
     if (signingSecretKeyLength ==  0 || signingSecretKeyLength > BUFFER_SIZE(TPM2B_AUTH, buffer))
     {
-        ERROR("Invalid key secret length: %x", signingSecretKeyLength);
+        ERROR("Invalid key secret length: 0x%lx", signingSecretKeyLength);
         return -1;
     }
 
@@ -72,7 +72,7 @@ int Sign(const tpmCtx* ctx,
 
     if (hashBytesLength == 0 || hashBytesLength > ARRAY_SIZE(hash.buffer))
     {
-        ERROR("Invalid hash bytes length: %x", hashBytesLength);
+        ERROR("Invalid hash bytes length: 0x%lx", hashBytesLength);
         return -1;
     }
 
@@ -166,7 +166,7 @@ int Sign(const tpmCtx* ctx,
     //---------------------------------------------------------------------------------------------
     if (signature.signature.rsassa.sig.size == 0 || signature.signature.rsassa.sig.size > ARRAY_SIZE(signature.signature.rsassa.sig.buffer))
     {
-        ERROR("Invalid signature bytes size: %x", signature.signature.rsassa.sig.size);
+        ERROR("Invalid signature bytes size: 0x%x", signature.signature.rsassa.sig.size);
         return -1;
     }
     

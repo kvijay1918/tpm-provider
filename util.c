@@ -24,7 +24,7 @@ int InitializeTpmAuth(TPM2B_AUTH* auth, const char* secretKey, size_t secretKeyL
 
     if(secretKeyLength == 0 || secretKeyLength > ARRAY_SIZE(auth->buffer))
     {
-        ERROR("Invalid secret key length: %d", secretKeyLength);
+        ERROR("Invalid secret key length: %ld", secretKeyLength);
         return -1;
     }
 
@@ -113,7 +113,7 @@ int ReadPublic(const tpmCtx* ctx,
 
     if(public.publicArea.unique.rsa.size == 0 || public.publicArea.unique.rsa.size > ARRAY_SIZE(public.publicArea.unique.rsa.buffer))
     {
-        ERROR("Incorrect buffer length %x", public.publicArea.unique.rsa.size);
+        ERROR("Incorrect buffer length 0x%x", public.publicArea.unique.rsa.size);
         return -1;   
     }
 

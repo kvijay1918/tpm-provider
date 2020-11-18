@@ -48,7 +48,7 @@ static int GetNVIndices(TSS2_SYS_CONTEXT *sys, TPMS_CAPABILITY_DATA* capability_
                                   NULL);
 
     if (rval != TSS2_RC_SUCCESS) {
-        ERROR("Tss2_Sys_GetCapability returned %x", rval);
+        ERROR("Tss2_Sys_GetCapability returned 0x%x", rval);
     }
 
     return rval;
@@ -59,36 +59,36 @@ static NvIndexStatus GetNvIndexStatus(TPMS_CAPABILITY_DATA* capability_data)
     NvIndexStatus results = {0};
 
     for (int i = 0; i < capability_data->data.handles.count; i++) {
-        DEBUG("NV index %x is present", capability_data->data.handles.handle[i]);
+        DEBUG("NV index 0x%x is present", capability_data->data.handles.handle[i]);
 
         switch(capability_data->data.handles.handle[i])
         {
         case NV_IDX_RSA_ENDORSEMENT_CERTIFICATE:
-            DEBUG("RSA EK Certificate is present at nv index %x", NV_IDX_RSA_ENDORSEMENT_CERTIFICATE)
+            DEBUG("RSA EK Certificate is present at nv index 0x%x", NV_IDX_RSA_ENDORSEMENT_CERTIFICATE)
             results.RsaEkCertificate = NV_INDEX_PRESENT;
             break;
         case NV_INDEX_RSA_NONCE:
-            DEBUG("RSA nonce is present at nv index %x", NV_INDEX_RSA_NONCE)
+            DEBUG("RSA nonce is present at nv index 0x%x", NV_INDEX_RSA_NONCE)
             results.RsaEkNonce = NV_INDEX_PRESENT;
             break;
         case NV_INDEX_RSA_TEMPLATE:
-            DEBUG("RSA template is present at nv index %x", NV_INDEX_RSA_TEMPLATE)
+            DEBUG("RSA template is present at nv index 0x%x", NV_INDEX_RSA_TEMPLATE)
             results.RsaEkTemplate = NV_INDEX_PRESENT;
             break;
         case NV_IDX_ECC_ENDORSEMENT_CERTIFICATE:
-            DEBUG("ECC EK Certificate is present at nv index %x", NV_IDX_ECC_ENDORSEMENT_CERTIFICATE)
+            DEBUG("ECC EK Certificate is present at nv index 0x%x", NV_IDX_ECC_ENDORSEMENT_CERTIFICATE)
             results.EccEkCertificate = NV_INDEX_PRESENT;
             break;
         case NV_INDEX_ECC_NONCE:
-            DEBUG("ECC nonce is present at nv index %x", NV_INDEX_ECC_NONCE)
+            DEBUG("ECC nonce is present at nv index 0x%x", NV_INDEX_ECC_NONCE)
             results.EccEkNonce = NV_INDEX_PRESENT;
             break;
         case NV_INDEX_ECC_TEMPLATE:
-            DEBUG("ECC template is present at nv index %x", NV_INDEX_ECC_TEMPLATE)
+            DEBUG("ECC template is present at nv index 0x%x", NV_INDEX_ECC_TEMPLATE)
             results.EccEkTemplate = NV_INDEX_PRESENT;
             break;
         default:
-            DEBUG("Unhandled nv index %x", capability_data->data.handles.handle[i])
+            DEBUG("Unhandled nv index 0x%x", capability_data->data.handles.handle[i])
             break;
         }
     }
@@ -255,17 +255,17 @@ int GetEkTemplate(const tpmCtx* ctx, TPM2B_AUTH *ownerAuth, TPMT_PUBLIC* outPubl
         DEBUG("The EK Nonce will not be applied")
     }
 
-    DEBUG("Template Type:        %x", outPublic->type);
-    DEBUG("Template Alg:         %x", outPublic->nameAlg);
-    DEBUG("Template Attributes:  %x", outPublic->objectAttributes);
-    DEBUG("Template Auth Size:   %x", outPublic->authPolicy.size);
-    DEBUG("Template Sym Algo:    %x", outPublic->parameters.rsaDetail.symmetric.algorithm);
-    DEBUG("Template Sym Keybits: %x", outPublic->parameters.rsaDetail.symmetric.keyBits);
-    DEBUG("Template Sym Mode:    %x", outPublic->parameters.rsaDetail.symmetric.mode);
-    DEBUG("Template Scheme:      %x", outPublic->parameters.rsaDetail.scheme.scheme);
-    DEBUG("Template Keybits:     %x", outPublic->parameters.rsaDetail.keyBits);
-    DEBUG("Template Exponent:    %x", outPublic->parameters.rsaDetail.exponent);
-    DEBUG("Template Unique Size: %x", outPublic->unique.rsa.size);
+    DEBUG("Template Type:        0x%x", outPublic->type);
+    DEBUG("Template Alg:         0x%x", outPublic->nameAlg);
+    DEBUG("Template Attributes:  0x%x", outPublic->objectAttributes);
+    DEBUG("Template Auth Size:   0x%x", outPublic->authPolicy.size);
+    DEBUG("Template Sym Algo:    0x%x", outPublic->parameters.rsaDetail.symmetric.algorithm);
+    DEBUG("Template Sym Keybits: 0x%x", outPublic->parameters.rsaDetail.symmetric.keyBits);
+    DEBUG("Template Sym Mode:    0x%x", outPublic->parameters.rsaDetail.symmetric.mode);
+    DEBUG("Template Scheme:      0x%x", outPublic->parameters.rsaDetail.scheme.scheme);
+    DEBUG("Template Keybits:     0x%x", outPublic->parameters.rsaDetail.keyBits);
+    DEBUG("Template Exponent:    0x%x", outPublic->parameters.rsaDetail.exponent);
+    DEBUG("Template Unique Size: 0x%x", outPublic->unique.rsa.size);
 
     return TSS2_RC_SUCCESS;
 }

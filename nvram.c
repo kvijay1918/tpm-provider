@@ -248,7 +248,7 @@ int NvWrite(const tpmCtx* ctx,
 
     if(nvBytesLength == 0 || nvBytesLength > TPM2_MAX_NV_BUFFER_SIZE)
     {
-        ERROR("Invalid nv write buffer size: 0x%x", nvBytesLength);
+        ERROR("Invalid nv write buffer size: 0x%lx", nvBytesLength);
         return -1;
     }
 
