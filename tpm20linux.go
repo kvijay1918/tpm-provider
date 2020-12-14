@@ -41,9 +41,9 @@ func (linuxImpl linuxTpmFactory) NewTpmProvider() (TpmProvider, error) {
 	conf = nil
 	if linuxImpl.conf != "" {
 		conf = C.CString(linuxImpl.conf)
-		defer C.free(unsafe.Pointer(conf))	
+		defer C.free(unsafe.Pointer(conf))
 	}
-	
+
 	ctx = C.TpmCreate((C.uint)(linuxImpl.tctiType), conf)
 
 	if ctx == nil {

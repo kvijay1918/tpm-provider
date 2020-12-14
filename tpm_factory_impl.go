@@ -5,13 +5,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
- package tpmprovider
+package tpmprovider
 
- import (
-	 "errors"
-	 "runtime"
- )
- 
+import (
+	"errors"
+	"runtime"
+)
+
 //
 // Creates the default TpmFactory that currently uses TSS2 and 'abrmd'.
 //

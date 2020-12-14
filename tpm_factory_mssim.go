@@ -10,8 +10,8 @@ package tpmprovider
 import (
 	"errors"
 	"fmt"
-	"runtime"
 	"os"
+	"runtime"
 )
 
 //
@@ -20,7 +20,7 @@ import (
 //
 func NewTpmFactory() (TpmFactory, error) {
 
-	// if TPM_SIMULATOR_PORT is present in the env, apply that 
+	// if TPM_SIMULATOR_PORT is present in the env, apply that
 	// value to 'conf'.
 	conf := ""
 	port := os.Getenv("TPM_SIMULATOR_PORT")
@@ -32,7 +32,7 @@ func NewTpmFactory() (TpmFactory, error) {
 
 	fmt.Printf("Creating MSSIM TpmFactory using conf '%s'\n", conf)
 	if runtime.GOOS == "linux" {
-		return linuxTpmFactory{tctiType: TCTI_MSSIM, conf: conf,}, nil
+		return linuxTpmFactory{tctiType: TCTI_MSSIM, conf: conf}, nil
 	} else {
 		return nil, errors.New("Unsupported tpm factory platform " + runtime.GOOS)
 	}
