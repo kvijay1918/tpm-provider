@@ -120,8 +120,8 @@ static int getQuote(TSS2_SYS_CONTEXT* sys,
 // TpmV20.java::getQuote(): Creates TpmQuote.quoteData bytes 'combined' from...
 //  - QuoteResponse.toTpm()
 //     - Quote...
-//       - 2 byte int of length of quote size
-//       - bytes from TPMS_ATTEST (this struture contains the selected pcrs in TPMU_ATTEST)
+//       - 2 bytes int of length of quote size
+//       - bytes from TPMS_ATTEST (this structure contains the selected pcrs in TPMU_ATTEST)
 //       ==> THIS SHOULD BE A TPM2B_ATTEST structure
 //     - Signature...
 //       - 2 bytes for signature algorithm
@@ -138,6 +138,57 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
                              uint8_t** quoteBytes, 
                              int* quoteBytesLength) 
 {
+    size_t      off = 0;            // offset in 'quoteBytes' to help with writing quote
+    size_t      bufferSize = 0;     // total size of buffer to allocate
+    uint16_t    tmp = 0;            // tmp var for bswap
+
+
+    //bufferSize = sizeof(TPM2B_ATTEST) + sizeof(uint16_t) + sizeof(TPMT_SIGNATURE);
+    bufferSize = sizeof(uint16_t) + quote->size + sizeof(uint16_t) + signature->signature.rsassa.sig.size;
+
+    *quoteBytes = (uint8_t*)calloc(bufferSize, 1);
+    if(!*quoteBytes) 
+    {
+        ERROR("Could not allocate quote buffer");
+        return -1;
+    }
+
+
+    DEBUG("Quote Size: %x", quote->size);
+    memcpy((*quoteBytes + off), &quote->size, sizeof(uint16_t));
+    off += sizeof(uint16_t);
+
+    memcpy((*quoteBytes + off), quote->attestationData, quote->size);
+    off += quote->size;//sizeof(TPM2B_ATTEST);
+
+    // DEBUG("TPMS_ATTEST @:%x", offsetof(TPM2B_ATTEST, attestationData));
+    // DEBUG("magic @:%x", offsetof(TPMS_ATTEST, magic));
+    // DEBUG("type @:%x", offsetof(TPMS_ATTEST, type));
+    // DEBUG("qualifiedSigner @:%x", offsetof(TPMS_ATTEST, qualifiedSigner));
+    // DEBUG("extraData @:%x", offsetof(TPMS_ATTEST, extraData));
+
+
+    // TPMS_ATTEST* attest = (TPMS_ATTEST*)quote->attestationData;
+    // DEBUG("%08x: attest->clockInfo.clock (time in milliseconds during which the TPM has been powered)", attest->clockInfo.clock);
+    // DEBUG("%08x: attest->clockInfo.resetCount (number of occurrences of TPM Reset since the last TPM2_Clear)", attest->clockInfo.resetCount);
+    // DEBUG("%08x: attest->clockInfo.restartCount (number of times that TPM2_Shutdown or _TPM_Hash_Start have occurred since the last TPM Reset or TPM2_Clear.", attest->clockInfo.restartCount);
+
+
+    DEBUG("SIGNATURE LEN %x AT %x", signature->signature.rsassa.sig.size, off);
+    memcpy((*quoteBytes + off), &signature->signature.rsassa.sig.size, sizeof(uint16_t));
+    off += sizeof(uint16_t);
+
+    DEBUG("SIGNATURE IS AT %x", off);
+//    DEBUG("SIGNATURE LENGTH %x", tmp);
+//    DEBUG("SIGNATURE TYPE %x", signature->sigAlg);
+
+
+    memcpy((*quoteBytes + off), signature->signature.rsassa.sig.buffer, signature->signature.rsassa.sig.size);
+
+    *quoteBytesLength = bufferSize;
+    return TSS2_RC_SUCCESS;
+
+/*
     size_t      off = 0;            // offset in 'quoteBytes' to help with writing quote
     uint16_t    tmp = 0;            // tmp var for bswap
     size_t      bufferSize = 0;     // total size of buffer to allocate
@@ -252,6 +303,7 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
 
     *quoteBytesLength = bufferSize;
     return TSS2_RC_SUCCESS;
+*/
 }
 
 int GetTpmQuote(const tpmCtx* ctx, 

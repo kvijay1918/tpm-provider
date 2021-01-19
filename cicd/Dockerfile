@@ -15,7 +15,7 @@
 #   Note: This may need to be run disconnected from the proxy and without 'build-args' on Windows.
 #
 # Create a container, mapping the current directory to /docker_host...
-# > docker run -d --rm -v $(pwd):/docker_host -v ~/.ssh:/root/.ssh --name=tpm-devel tpm-devel tail -f /dev/null
+# > docker run -d --rm -v $(pwd):/docker_host -v ~/.ssh:/root/.ssh -v ~/.gitconfig:/root/.gitconfig --name=tpm-devel tpm-devel tail -f /dev/null
 #
 # Attach to the container, configure git and 'make'
 # > docker exec -it tpm-devel /bin/bash
