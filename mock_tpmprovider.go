@@ -28,6 +28,11 @@ type MockedTpmProvider struct {
 	mock.Mock
 }
 
+func (mockedTpm MockedTpmProvider) Create() error {
+	_ = mockedTpm.Called()
+	return nil
+}
+
 func (mockedTpm MockedTpmProvider) Close() {
 	_ = mockedTpm.Called()
 	return
