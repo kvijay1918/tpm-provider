@@ -31,7 +31,7 @@ func createSimulatorAndFactory(t *testing.T) TpmSimulator {
 		assert.FailNowf(t, "Could not start TPM Simulator", "%s", err)
 	}
 
-	InitializeTpmFactory(TCTI_MSSIM, "host=localhost,port=2321")
+	InitializeTpmFactory("mssim", "host=localhost,port=2321")
 
 	return tpmSimulator
 }
@@ -86,7 +86,7 @@ func TestTpmFactory(t *testing.T) {
 
 	defer tpmSimulator.Stop()
 
-	InitializeTpmFactory(TCTI_MSSIM, "host=localhost,port=2321")
+	InitializeTpmFactory("mssim", "host=localhost,port=2321")
 
 	for i := 1; i < 5; i++ {
 		t.Log("creating tpm...")
@@ -496,7 +496,7 @@ func TestMultiThreadedQuote(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	InitializeTpmFactory(TCTI_MSSIM, "host=localhost,port=2321")
+	InitializeTpmFactory("mssim", "host=localhost,port=2321")
 
 	// Provision the TPM to support quotes...
 	tpmProvider, err := NewTpmProvider()

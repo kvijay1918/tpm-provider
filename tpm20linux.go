@@ -24,7 +24,6 @@ import (
 )
 
 type linuxTpmFactory struct {
-	TpmFactory
 	tctiType uint32
 	conf     string
 }

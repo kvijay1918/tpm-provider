@@ -13,14 +13,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type MockedTpmFactory struct {
-	TpmProvider *MockedTpmProvider
-}
-
-func (mockedTpmFactory MockedTpmFactory) NewTpmProvider() (TpmProvider, error) {
-	return mockedTpmFactory.TpmProvider, nil
-}
-
 //-------------------------------------------------------------------------------------------------
 // Mocked TpmProvider interface
 //-------------------------------------------------------------------------------------------------
