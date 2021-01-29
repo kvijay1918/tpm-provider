@@ -21,7 +21,7 @@ func InitializeTpmFactory(tcti string, cfg string) error {
 		return nil
 	case TCTI_DEVICE:
 		if cfg == "" {
-			factory = &linuxTpmFactory{tctiType: TCTI_ABRMD, conf: cfg}
+			factory = &linuxTpmFactory{tctiType: TCTI_DEVICE, conf: "/dev/tpmrm0"}
 			return nil
 		} else if cfg == "/dev/tpm0" || cfg == "/dev/tpmrm0" {
 			factory = &linuxTpmFactory{tctiType: TCTI_DEVICE, conf: cfg}
