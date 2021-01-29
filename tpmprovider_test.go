@@ -23,7 +23,7 @@ const (
 	CertifiedKeySecret = "feedfeedfeedfeedfeedfeedfeedfeedfeedfeed"
 )
 
-func createSimulatorAndFactory(t *testing.T) (TpmSimulator, TpmFactory) {
+func createSimulatorAndFactory(t *testing.T) TpmSimulator {
 
 	tpmSimulator := NewTpmSimulator()
 	err := tpmSimulator.Start()
@@ -31,21 +31,18 @@ func createSimulatorAndFactory(t *testing.T) (TpmSimulator, TpmFactory) {
 		assert.FailNowf(t, "Could not start TPM Simulator", "%s", err)
 	}
 
-	tpmFactory, err := NewTpmFactory()
-	if err != nil {
-		assert.FailNowf(t, "Could create TPM Factory", "%s", err)
-	}
+	InitializeTpmFactory(TCTI_MSSIM, "host=localhost,port=2321")
 
-	return tpmSimulator, tpmFactory
+	return tpmSimulator
 }
 
 // Creates a new instance of the TPM simulator and TpmProvider.  The simulator
 // is not provisioned with an owner secret or EK Certificate (see createProvisionedSimulatorAndProvider).
 func createSimulatorAndProvider(t *testing.T) (TpmSimulator, TpmProvider) {
 
-	tpmSimulator, tpmFactory := createSimulatorAndFactory(t)
+	tpmSimulator := createSimulatorAndFactory(t)
 
-	tpmProvider, err := tpmFactory.NewTpmProvider()
+	tpmProvider, err := NewTpmProvider()
 	if err != nil {
 		assert.FailNowf(t, "Could not create TPM Provider", "%s", err)
 	}
@@ -84,15 +81,12 @@ func TestTpmFactory(t *testing.T) {
 
 	defer tpmSimulator.Stop()
 
-	tpmFactory, err := NewTpmFactory()
-	if err != nil {
-		assert.FailNowf(t, "Could create TPM Factory", "%s", err)
-	}
+	InitializeTpmFactory(TCTI_MSSIM, "host=localhost,port=2321")
 
 	for i := 1; i < 5; i++ {
 		t.Log("creating tpm...")
 
-		tpmProvider, err := tpmFactory.NewTpmProvider()
+		tpmProvider, err := NewTpmProvider()
 		if err != nil {
 			assert.FailNowf(t, "Could not create TPM Provider", "%s", err)
 		}
@@ -423,13 +417,10 @@ func TestMultiThreadedQuote(t *testing.T) {
 
 	var wg sync.WaitGroup
 
-	tpmFactory, err := NewTpmFactory()
-	if err != nil {
-		assert.FailNowf(t, "Could not create TPM Factory", "%s", err)
-	}
+	InitializeTpmFactory(TCTI_MSSIM, "host=localhost,port=2321")
 
 	// Provision the TPM to support quotes...
-	tpmProvider, err := tpmFactory.NewTpmProvider()
+	tpmProvider, err := NewTpmProvider()
 	if err != nil {
 		assert.FailNowf(t, "Could not create TPM Provider", "%s", err)
 	}
@@ -464,7 +455,7 @@ func TestMultiThreadedQuote(t *testing.T) {
 			fmt.Printf("Thread[%d]: Sleeping for %d milliseconds\n", threadNum, sleep)
 			time.Sleep(time.Duration(sleep.Int64()))
 
-			tpm, err := tpmFactory.NewTpmProvider()
+			tpm, err := NewTpmProvider()
 			assert.NoError(t, err)
 			defer tpm.Close()
 

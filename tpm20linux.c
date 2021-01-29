@@ -29,30 +29,27 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
 
     if (tctiType == TCTI_DEVICE) 
     {
-        if (tss2Conf == NULL) {
-            tss2Conf = "/dev/tpm0";
-        }
-
         rc = Tss2_Tcti_Device_Init (NULL, &size, NULL);
+        if (rc != TPM2_RC_SUCCESS)
+        {
+            ERROR("Tss2_Tcti_Device_Init return %d\n", rc);
+            free(ctx);
+            return NULL;
+        }
     }
     else if (tctiType == TCTI_MSSIM)
     {
-        if (tss2Conf == NULL) {
-            tss2Conf = "host=localhost,port=2321";
-        }
-
         Tss2_Tcti_Mssim_Init(NULL, &size, NULL);
     }
     else
     {
         rc = Tss2_Tcti_Tabrmd_Init(NULL, &size, NULL);
-    }
-    
-    if (rc != TPM2_RC_SUCCESS) 
-    {
-        ERROR("Tss2_Tcti_Tabrmd_Init return %d\n", rc);
-        free(ctx);
-        return NULL;
+        if (rc != TPM2_RC_SUCCESS)
+        {
+            ERROR("Tss2_Tcti_Tabrmd_Init return %d\n", rc);
+            free(ctx);
+            return NULL;
+        }
     }
 
     ctx->tcti = (TSS2_TCTI_CONTEXT*)calloc(1, size);

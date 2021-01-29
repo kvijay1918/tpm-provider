@@ -34,17 +34,21 @@ const (
 	INVALID_AIK_SECRET_KEY   = "Invalid aik secret key"
 )
 
-func (linuxImpl linuxTpmFactory) NewTpmProvider() (TpmProvider, error) {
+func NewTpmProvider() (TpmProvider, error) {
 	var ctx *C.tpmCtx
+
+	if factory == nil {
+		return nil, errors.New("InitializeTpmFactory has not been called")
+	}
 
 	var conf *C.char
 	conf = nil
-	if linuxImpl.conf != "" {
-		conf = C.CString(linuxImpl.conf)
+	if factory.conf != "" {
+		conf = C.CString(factory.conf)
 		defer C.free(unsafe.Pointer(conf))
 	}
 
-	ctx = C.TpmCreate((C.uint)(linuxImpl.tctiType), conf)
+	ctx = C.TpmCreate((C.uint)(factory.tctiType), conf)
 
 	if ctx == nil {
 		return nil, errors.New("Could not create tpm context")
