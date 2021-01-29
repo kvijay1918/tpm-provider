@@ -35,12 +35,18 @@ const (
 )
 
 func NewTpmProvider() (TpmProvider, error) {
-	var ctx *C.tpmCtx
-
 	if factory == nil {
 		return nil, errors.New("InitializeTpmFactory has not been called")
 	}
+	return &tpm20Linux{}, nil
+}
 
+type tpm20Linux struct {
+	tpmCtx *C.tpmCtx
+}
+
+func (t *tpm20Linux) Create() error {
+	var ctx *C.tpmCtx
 	var conf *C.char
 	conf = nil
 	if factory.conf != "" {
@@ -51,15 +57,10 @@ func NewTpmProvider() (TpmProvider, error) {
 	ctx = C.TpmCreate((C.uint)(factory.tctiType), conf)
 
 	if ctx == nil {
-		return nil, errors.New("Could not create tpm context")
+		return errors.New("Could not create tpm context")
 	}
-
-	tpmProvider := tpm20Linux{tpmCtx: ctx}
-	return &tpmProvider, nil
-}
-
-type tpm20Linux struct {
-	tpmCtx *C.tpmCtx
+	t.tpmCtx = ctx
+	return nil
 }
 
 func (t *tpm20Linux) Close() {

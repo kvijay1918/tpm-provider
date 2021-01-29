@@ -44,6 +44,11 @@ const (
 type TpmProvider interface {
 
 	//
+	// Create the resources associated with the TpmProvider.
+	//
+	Create() error
+
+	//
 	// Releases the resources associated with the TpmProvider.
 	//
 	Close()
