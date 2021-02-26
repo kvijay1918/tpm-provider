@@ -142,3 +142,8 @@ func (mockedTpm MockedTpmProvider) IsValidEk(ownerSecretKey string, handle uint3
 	args := mockedTpm.Called(ownerSecretKey, handle, nvIndex)
 	return args.Bool(0), args.Error(1)
 }
+
+func (mockedTpm MockedTpmProvider) IsPcrBankActive(pcrBank string) (bool, error) {
+	args := mockedTpm.Called(pcrBank)
+	return args.Bool(0), args.Error(1)
+}

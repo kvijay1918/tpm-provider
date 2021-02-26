@@ -32,6 +32,7 @@ type linuxTpmFactory struct {
 const (
 	INVALID_OWNER_SECRET_KEY = "Invalid owner secret key"
 	INVALID_AIK_SECRET_KEY   = "Invalid aik secret key"
+	Tss2RcSuccess            = 0
 )
 
 func (linuxImpl linuxTpmFactory) NewTpmProvider() (TpmProvider, error) {
@@ -276,7 +277,7 @@ func (t *tpm20Linux) GetTpmQuote(aikSecretKey string, nonce []byte, pcrBanks []s
 		return nil, errors.Wrap(err, INVALID_AIK_SECRET_KEY)
 	}
 
-	// create a buffer that describes the pcr selction that can be
+	// create a buffer that describes the pcr selection that can be
 	// used by tss2
 	pcrSelectionBytes, err := getPcrSelectionBytes(pcrBanks, pcrs)
 	if err != nil {
@@ -699,4 +700,29 @@ func validateAndConvertKey(key string) ([]byte, error) {
 	}
 
 	return keyBytes, nil
+}
+
+// IsPcrBankActive is used to determine if a PCR bank for the specified hash algo is enabled in the TPM
+func (t *tpm20Linux) IsPcrBankActive(pcrBank string) (bool, error) {
+	// create a buffer that describes the pcr selection that can be used by tss2
+	pcrSelectionBytes, err := getPcrSelectionBytes([]string{pcrBank}, []int{0})
+	if err != nil {
+		return false, errors.Wrap(err, "Unable to initialize PCR selection bytes")
+	}
+
+	// pass the buffer to the device
+	rval := C.IsPcrBankActive(t.tpmCtx,
+		(*C.uint8_t)(unsafe.Pointer(&pcrSelectionBytes[0])),
+		C.size_t(len(pcrSelectionBytes)))
+
+	switch rval {
+	case Tss2RcSuccess:
+		return true, nil
+	case TPM_PROVIDER_INVALID_PCRSELECTION:
+		return false, NewTpmProviderError(int(rval))
+	case TPM_PROVIDER_INVALID_PCRCOUNT:
+		return true, NewTpmProviderError(int(rval))
+	default:
+		return false, NewTpmProviderError(int(rval))
+	}
 }

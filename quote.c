@@ -65,7 +65,7 @@ static int getPcrs(TSS2_SYS_CONTEXT* sys,
         //3. unmask pcrSelectionOut bits from pcrSelectionIn
         update_pcr_selections(&pcr_selection_tmp, &pcr_selection_out);
 
-        //4. goto step 2 if pcrSelctionIn still has bits set
+        //4. goto step 2 if pcrSelectionIn still has bits set
     } while (++count < 24 && !unset_pcr_sections(&pcr_selection_tmp));
 
     *pcrCount = count;
@@ -89,7 +89,7 @@ static int getQuote(TSS2_SYS_CONTEXT* sys,
 
     inScheme.scheme = TPM2_ALG_NULL;
 
-    // neded for tpm2-tss-2.0.0-4.el8.x86_64 (rhel8)
+    // needed for tpm2-tss-2.0.0-4.el8.x86_64 (rhel8)
     // not needed tpm2-tss-2.1.2-1.fc29.x86_64 (fedora 29)
     memcpy(&sessionsData.auths[0].hmac, akPassword, sizeof(TPM2B_AUTH));
 
@@ -108,7 +108,7 @@ static int getQuote(TSS2_SYS_CONTEXT* sys,
     return TSS2_RC_SUCCESS;
 }
 
-#define DEFAULT_PCR_MEASURMENT_COUNT 24
+#define DEFAULT_PCR_MEASUREMENT_COUNT 24
 
 
 // HVS wants a custom blob of data (format documented below based on) 
@@ -228,7 +228,7 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
     // copy pcr measurements to output buffer.  Just concatenate the measurements, HVS will
     // use the pcr selections in the quote to determine theyr lengths.
     //
-    for(int i = 0; i < DEFAULT_PCR_MEASURMENT_COUNT; i++)
+    for(int i = 0; i < DEFAULT_PCR_MEASUREMENT_COUNT; i++)
     {
         for (int j = 0; j < pcrMeasurements[i].count; j++)
         {
@@ -270,7 +270,7 @@ int GetTpmQuote(const tpmCtx* ctx,
     TPMT_SIGNATURE      signature = {0};                                        // signature data from TPM
     TPML_PCR_SELECTION* pcrSelection;                                           // which banks/pcrs to collect (from HVS request)
     TPM2B_DATA          qualifyingData = {0};                                   // the 'nonce' from HVS
-    TPML_DIGEST         pcrMeasurements[DEFAULT_PCR_MEASURMENT_COUNT] = {0};    // pcr measurements from TPM
+    TPML_DIGEST         pcrMeasurements[DEFAULT_PCR_MEASUREMENT_COUNT] = {0};    // pcr measurements from TPM
     size_t              pcrsCollectedCount = 0;                                 // number of pcr measurements collected
 
     // KWT: the aik is required on rhel8, but fails when set in the simulator
@@ -349,4 +349,45 @@ int GetTpmQuote(const tpmCtx* ctx,
     }
 
     return CreateQuoteBuffer(&quote, &signature, pcrSelection, pcrMeasurements, quoteBytes, quoteBytesLength);
+}
+
+// IsPcrBankActive is used to determine if PCR bank for a hash algorithm is active
+int IsPcrBankActive(const tpmCtx* ctx,
+                const uint8_t* pcrSelectionBytes,
+                size_t pcrSelectionBytesLength)
+{
+    TSS2_RC             rval;
+    TPML_PCR_SELECTION* pcrSelection;                                           // only PCR0 will be collected
+    TPML_DIGEST         pcrMeasurements[DEFAULT_PCR_MEASUREMENT_COUNT] = {0};    // pcr measurements from TPM
+    size_t              pcrsCollectedCount = 0;                                 // number of pcr measurements collected
+
+    if (pcrSelectionBytes == NULL || pcrSelectionBytesLength == 0 || pcrSelectionBytesLength > sizeof(TPML_PCR_SELECTION))
+    {
+        ERROR("Invalid pcrselection parameter");
+        return TPM_PROVIDER_INVALID_PCRSELECTION;
+    }
+
+    pcrSelection = (TPML_PCR_SELECTION*)pcrSelectionBytes;
+
+    //
+    // get the pcr measurements
+    //
+    rval = getPcrs(ctx->sys,
+                   pcrSelection,
+                   pcrMeasurements,
+                   &pcrsCollectedCount);
+
+    if (rval != TSS2_RC_SUCCESS)
+    {
+        return rval;
+    }
+
+    // since we are only collecting PCR0 the number of entries should be == 1
+    if (pcrsCollectedCount != 1)
+    {
+         ERROR("Unexpected amount of pcrs collected: 0x%lx", pcrsCollectedCount)
+         return TPM_PROVIDER_INVALID_PCRCOUNT;
+    }
+
+    return TSS2_RC_SUCCESS;
 }

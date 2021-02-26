@@ -37,8 +37,10 @@ const (
 	TCTI_DEVICE = C.TCTI_DEVICE
 	TCTI_MSSIM  = C.TCTI_MSSIM
 
-	TPM_PROVIDER_ERROR_NO_EK_CERT   = C.TPM_PROVIDER_ERROR_NO_EK_CERT
-	TPM_PROVIDER_EK_PUBLIC_MISMATCH = C.TPM_PROVIDER_EK_PUBLIC_MISMATCH
+	TPM_PROVIDER_ERROR_NO_EK_CERT     = C.TPM_PROVIDER_ERROR_NO_EK_CERT
+	TPM_PROVIDER_EK_PUBLIC_MISMATCH   = C.TPM_PROVIDER_EK_PUBLIC_MISMATCH
+	TPM_PROVIDER_INVALID_PCRSELECTION = C.TPM_PROVIDER_INVALID_PCRSELECTION
+	TPM_PROVIDER_INVALID_PCRCOUNT     = C.TPM_PROVIDER_INVALID_PCRCOUNT
 )
 
 type TpmProvider interface {
@@ -166,4 +168,7 @@ type TpmProvider interface {
 	// the EK Certificate at 'nvIndex' (returns false if they don't match or error).
 	//
 	IsValidEk(ownerSecretKey string, handle uint32, nvIndex uint32) (bool, error)
+
+	// IsPcrBankActive is used to determine if a PCR bank for the specified hash algo is enabled in the TPM
+	IsPcrBankActive(pcrBank string) (bool, error)
 }

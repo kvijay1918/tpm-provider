@@ -46,6 +46,8 @@ typedef enum TPM_PROVIDER_ERROR
 {
     TPM_PROVIDER_ERROR_NO_EK_CERT = 0x100000,
     TPM_PROVIDER_EK_PUBLIC_MISMATCH,
+    TPM_PROVIDER_INVALID_PCRSELECTION,
+    TPM_PROVIDER_INVALID_PCRCOUNT,
 } TPM_PROVIDER_ERROR;
 
 typedef struct CertifiedKey {
@@ -205,5 +207,10 @@ int IsValidEk(const tpmCtx* ctx,
               size_t ownerSecretKeyLenth, 
               uint32_t handle, 
               uint32_t ekCertificateIndex);
+
+int IsPcrBankActive(const tpmCtx* ctx,
+                const uint8_t* pcrSelectionBytes,
+                size_t pcrSelectionBytesLength);
+
 
 #endif

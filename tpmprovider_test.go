@@ -482,3 +482,26 @@ func TestMultiThreadedQuote(t *testing.T) {
 
 	wg.Wait()
 }
+
+func TestDetectPcrActive(t *testing.T) {
+
+	tpmSimulator, tpmProvider := createProvisionedSimulatorAndProvider(t)
+	defer tpmSimulator.Stop()
+	defer tpmProvider.Close()
+
+	isActivePcr, err := tpmProvider.IsPcrBankActive("SHA1")
+	assert.NoError(t, err)
+	assert.True(t, isActivePcr)
+
+	isActivePcr, err = tpmProvider.IsPcrBankActive("SHA256")
+	assert.NoError(t, err)
+	assert.True(t, isActivePcr)
+
+	isActivePcr, err = tpmProvider.IsPcrBankActive("SHA384")
+	assert.NoError(t, err)
+	assert.True(t, isActivePcr)
+
+	isActivePcr, err = tpmProvider.IsPcrBankActive("ABCD")
+	assert.Error(t, err)
+	assert.False(t, isActivePcr)
+}
