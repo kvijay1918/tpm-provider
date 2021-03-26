@@ -14,7 +14,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <tss2/tss2_sys.h>
-#include <tss2/tss2-tcti-tabrmd.h>
 #include <tss2/tss2_tcti_device.h>
 #include <tss2/tss2_tcti_mssim.h>
 

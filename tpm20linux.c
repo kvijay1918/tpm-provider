@@ -12,7 +12,7 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
     TSS2_ABI_VERSION abiVersion = {0};
     const char* tss2Conf = conf;
 
-    if (tctiType != TCTI_ABRMD && tctiType != TCTI_DEVICE && tctiType != TCTI_MSSIM) 
+    if (tctiType != TCTI_DEVICE && tctiType != TCTI_MSSIM)
     {
         ERROR("Incorrect tcti type: %d\n", tctiType);
         return NULL;
@@ -29,28 +29,16 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
 
     if (tctiType == TCTI_DEVICE) 
     {
-        if (tss2Conf == NULL) {
-            tss2Conf = "/dev/tpm0";
-        }
-
         rc = Tss2_Tcti_Device_Init (NULL, &size, NULL);
     }
     else if (tctiType == TCTI_MSSIM)
     {
-        if (tss2Conf == NULL) {
-            tss2Conf = "host=localhost,port=2321";
-        }
-
         Tss2_Tcti_Mssim_Init(NULL, &size, NULL);
-    }
-    else
-    {
-        rc = Tss2_Tcti_Tabrmd_Init(NULL, &size, NULL);
     }
     
     if (rc != TPM2_RC_SUCCESS) 
     {
-        ERROR("Tss2_Tcti_Tabrmd_Init return %d\n", rc);
+        ERROR("Tss2_Tcti_Device_Init return %d\n", rc);
         free(ctx);
         return NULL;
     }
@@ -59,15 +47,11 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
 
     if (tctiType == TCTI_DEVICE) 
     {
-        rc = Tss2_Tcti_Device_Init(ctx->tcti, &size, conf);
+        rc = Tss2_Tcti_Device_Init(ctx->tcti, &size, tss2Conf);
     }
     else if (tctiType == TCTI_MSSIM)
     {
-        Tss2_Tcti_Mssim_Init(ctx->tcti, &size, conf);
-    }
-    else 
-    {
-        rc = Tss2_Tcti_Tabrmd_Init(ctx->tcti, &size, conf);
+        Tss2_Tcti_Mssim_Init(ctx->tcti, &size, tss2Conf);
     }
 
     if (rc != TPM2_RC_SUCCESS) 

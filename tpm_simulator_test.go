@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	TPM2_ABRMD                 = "tpm2-abrmd"
 	TPM_SERVER                 = "tpm_server"
 	DEFAULT_SLEEP_MILLISECONDS = 500 * time.Millisecond
 	MAX_ATTEMPTS               = 5

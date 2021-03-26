@@ -17,7 +17,6 @@ typedef enum TPM_VERSION
 
 typedef enum TCTI_TYPE
 {
-    TCTI_ABRMD,
     TCTI_DEVICE,
     TCTI_MSSIM,
 } TCTI_TYPE;

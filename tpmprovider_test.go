@@ -418,7 +418,7 @@ func TestMultiThreadedQuote(t *testing.T) {
 
 	// This unit test is being skipped since it because deadlock occurs when the TSS2 is
 	// configured to use the mssim tcti directory.  The test will pass if
-	// it is run against tpm-abrmd via NewTpmFactory().
+	// it is run against /dev/tpmrm0 via NewTpmFactory().
 	t.Skip()
 
 	var wg sync.WaitGroup

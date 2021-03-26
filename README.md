@@ -6,7 +6,6 @@ The `tpm-provider` is a golang libary that interfaces with a TPM device to suppo
 - RHEL 8.0
 - TPM 2.0 device
 - Packages
-    - tpm2-abrmd (v2.0.x)
     - tpm2-tss (v2.0.x)
 - Proxy settings if applicable
 

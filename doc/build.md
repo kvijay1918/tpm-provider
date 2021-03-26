@@ -3,12 +3,11 @@ This document contains instructions for using `cicd/Dockerfile` for building `tp
 
 ## Rationale for 'tpm-devel' 
 
-The `tpm-provider` currently targets RHEL8.0 and requires `tpm2-tss` and `tpm2-abrmd` to interface with the host's TPM.  Installing those packages on RHEL 8.0 will result in the following vesions of Tss2...
+The `tpm-provider` currently targets RHEL8.0 and requires `tpm2-tss` to interface with the host's TPM.  Installing those packages on RHEL 8.0 will result in the following vesions of Tss2...
 
     tpm2-tss-2.0.0-4.el8.x86_64
-    tpm2-abrmd-2.1.1-3.el8.x86_64
 
-Due to the dependency on Tss2, any project that includes `tpm-provider` (ex. `go-trust-agent` and `workload-agent`) will need to be built on a Linux environment with those libraries present (as well as `tpm2-abrmd-devel`).
+Due to the dependency on Tss2, any project that includes `tpm-provider` (ex. `go-trust-agent` and `workload-agent`) will need to be built on a Linux environment with those libraries present.
 
 While developers could build `tpm-provider` on a physical host or vm with the correct versions of Tss2, the documentation in this repository refers to the use Docker and the `tpm-devel` image.
 
@@ -16,8 +15,9 @@ While developers could build `tpm-provider` on a physical host or vm with the co
 ## Prerequisites
 * Docker
 * git access to `tpm-provider`
+* tpm2-tss-devel package (includes header files, link libraries, etc. needed to compile the tpm-provider)
 
-Building, debuging and ci/cd use the `tpm-devel` image defined in cicd/Dockerfile.  It currently uses Fedora 29 and includes tools for compiling go, c/c++, makeself, tpm2-tss, tpm2-abrmd, etc. The image also includes the tpm-simulator.
+Building, debuging and ci/cd use the `tpm-devel` image defined in cicd/Dockerfile.  It currently uses Fedora 29 and includes tools for compiling go, c/c++, makeself, tpm2-tss etc. The image also includes the tpm-simulator.
 
 ## Compiling tpm-provider
 Currently, `tpm-provider` will be statically linked into go applications (ex. `go-trust-agent`) via `go.mod` and does not need to be built independently.  However, the project does include a Makefile that compiles unit tests into `out/tpmprovider.test` (for convenience).  To compile `tpm-provider`....

@@ -47,7 +47,7 @@ RUN yum -y update
 
 #  Install Development tools (gcc 8.3.1, ldd v2.28) tss2 and other dependencies
 RUN yum -y group install "Development Tools" 
-RUN yum -y install makeself gdb vim-common wget openssl-devel sudo tpm2-abrmd tpm2-tools tpm2-abrmd-devel
+RUN yum -y install makeself gdb vim-common wget openssl-devel sudo tpm2-tools tpm2-tss-devel
 
 # install go...
 ENV GOLANG_TAR=go1.14.6.linux-amd64.tar.gz
