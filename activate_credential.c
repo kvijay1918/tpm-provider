@@ -89,8 +89,6 @@ static int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys,
 int ActivateCredential(const tpmCtx* ctx, 
                        const uint8_t* ownerSecretKey, 
                        size_t ownerSecretKeyLength,
-                       const uint8_t* aikSecretKey, 
-                       size_t aikSecretKeyLength,
                        const uint8_t* credentialBytes, 
                        size_t credentialBytesLength,
                        const uint8_t* secretBytes, 
@@ -116,13 +114,9 @@ int ActivateCredential(const tpmCtx* ctx,
         return -1;
     }
 
+    // The aik password remains empty as it was provisioned with owner permissions 
+    // during setup (no password is needed).
     aikPassword.sessionHandle = TPM2_RS_PW;
-    InitializeTpmAuth(&aikPassword.hmac, aikSecretKey, aikSecretKeyLength);
-    if(rval != 0)
-    {
-        ERROR("There was an error populating the aik secret");
-        return -1;
-    }
 
     //
     // copy credentialBytes into the TPM2B_ID_OBJECT

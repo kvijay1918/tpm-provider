@@ -104,7 +104,7 @@ static int UnmarshalEkTemplate(const tpmCtx* ctx, TPM2B_AUTH* ownerAuth, uint32_
 
     DEBUG("Collecting EK template from nv index 0x%x", NV_INDEX_RSA_TEMPLATE);
 
-    rval = NvRead(ctx, (uint8_t*)ownerAuth->buffer, ownerAuth->size, nvIndex, &nvBytes, &nvLength);
+    rval = NvRead(ctx, (uint8_t*)ownerAuth->buffer, ownerAuth->size, TPM2_RH_OWNER, nvIndex, &nvBytes, &nvLength);
     if (rval != TPM2_RC_SUCCESS) 
     {
         ERROR("Could not read EK template at index 0x%x.  NvRead returned 0x%x", nvIndex, rval);
@@ -135,7 +135,7 @@ static int SetEkNonce(const tpmCtx* ctx, TPM2B_AUTH* ownerAuth, uint32_t nvIndex
     uint8_t* nvBytes;
     int      nvLength;
 
-    rval = NvRead(ctx, (uint8_t*)ownerAuth->buffer, ownerAuth->size, nvIndex, &nvBytes, &nvLength);
+    rval = NvRead(ctx, (uint8_t*)ownerAuth->buffer, ownerAuth->size, TPM2_RH_OWNER, nvIndex, &nvBytes, &nvLength);
     if (rval != TPM2_RC_SUCCESS) 
     {
         ERROR("Could not read EK nonce at index 0x%x.  NvRead returned 0x%x", nvIndex, rval);

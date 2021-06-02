@@ -9,9 +9,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
                        CertifiedKey* keyOut, 
                        TPM_CERTIFIED_KEY_USAGE keyUsage, 
                        const uint8_t* ownerSecretKey, 
-                       size_t ownerSecretKeyLength,  
-                       const uint8_t* aikSecretKey, 
-                       size_t aikSecretKeyLength)
+                       size_t ownerSecretKeyLength)
 {
     TSS2_RC                 rval;
     TPM2B_AUTH              ownerAuth = {0};
@@ -60,18 +58,6 @@ int CreateCertifiedKey(const tpmCtx* ctx,
     if (ownerSecretKeyLength == 0 || ownerSecretKeyLength > BUFFER_SIZE(TPM2B_AUTH, buffer))
     {
         ERROR("The owner secret key length is incorrect: 0x%lx", ownerSecretKeyLength);
-        return -1;
-    }
-
-    if (aikSecretKey == NULL) 
-    {
-        ERROR("The aik secret key must be provided");
-        return -1;
-    }
-
-    if (aikSecretKeyLength == 0 || aikSecretKeyLength > BUFFER_SIZE(TPM2B_AUTH, buffer))
-    {
-        ERROR("The aik secret key length is incorrect: 0x%lx", aikSecretKeyLength);
         return -1;
     }
 
@@ -171,11 +157,8 @@ int CreateCertifiedKey(const tpmCtx* ctx,
         return rval;
     }
  
+    // assume the aik password is empty as performed by trust-agent provisioning
     authCommand.auths[1].sessionHandle = TPM2_RS_PW;
-    rval = InitializeTpmAuth(&authCommand.auths[1].hmac, aikSecretKey, aikSecretKeyLength);
-    if (rval != 0) {
-        return rval;
-    }
 
     inScheme.scheme = TPM2_ALG_RSASSA;
     inScheme.details.rsassa.hashAlg = TPM2_ALG_SHA256;

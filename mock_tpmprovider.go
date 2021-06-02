@@ -48,8 +48,8 @@ func (mockedTpm MockedTpmProvider) IsOwnedWithAuth(ownerSecretKey string) (bool,
 	return args.Bool(0), args.Error(1)
 }
 
-func (mockedTpm MockedTpmProvider) CreateAik(ownerSecretKey string, aikSecretKey string) error {
-	args := mockedTpm.Called(ownerSecretKey, aikSecretKey)
+func (mockedTpm MockedTpmProvider) CreateAik(ownerSecretKey string) error {
+	args := mockedTpm.Called(ownerSecretKey)
 	return args.Error(0)
 }
 
@@ -63,13 +63,13 @@ func (mockedTpm MockedTpmProvider) GetAikName() ([]byte, error) {
 	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (mockedTpm MockedTpmProvider) ActivateCredential(ownerSecretKey string, aikSecretKey string, credentialBytes []byte, secretBytes []byte) ([]byte, error) {
-	args := mockedTpm.Called(ownerSecretKey, aikSecretKey, credentialBytes, secretBytes)
+func (mockedTpm MockedTpmProvider) ActivateCredential(ownerSecretKey string, credentialBytes []byte, secretBytes []byte) ([]byte, error) {
+	args := mockedTpm.Called(ownerSecretKey, credentialBytes, secretBytes)
 	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (mockedTpm MockedTpmProvider) GetTpmQuote(aikSecretKey string, nonce []byte, pcrBanks []string, pcrs []int) ([]byte, error) {
-	args := mockedTpm.Called(aikSecretKey, nonce, pcrBanks, pcrs)
+func (mockedTpm MockedTpmProvider) GetTpmQuote(nonce []byte, pcrBanks []string, pcrs []int) ([]byte, error) {
+	args := mockedTpm.Called(nonce, pcrBanks, pcrs)
 	return args.Get(0).([]byte), args.Error(1)
 }
 
@@ -78,8 +78,8 @@ func (mockedTpm MockedTpmProvider) NvIndexExists(nvIndex uint32) (bool, error) {
 	return args.Bool(0), args.Error(1)
 }
 
-func (mockedTpm MockedTpmProvider) NvDefine(ownerSecretKey string, nvIndex uint32, indexSize uint16) error {
-	args := mockedTpm.Called(ownerSecretKey, nvIndex, indexSize)
+func (mockedTpm MockedTpmProvider) NvDefine(ownerSecretKey string, tagSecretKey string, nvIndex uint32, indexSize uint16) error {
+	args := mockedTpm.Called(ownerSecretKey, tagSecretKey, nvIndex, indexSize)
 	return args.Error(0)
 }
 
@@ -88,13 +88,13 @@ func (mockedTpm MockedTpmProvider) NvRelease(ownerSecretKey string, nvIndex uint
 	return args.Error(0)
 }
 
-func (mockedTpm MockedTpmProvider) NvRead(ownerSecretKey string, nvIndex uint32) ([]byte, error) {
-	args := mockedTpm.Called(ownerSecretKey, nvIndex)
+func (mockedTpm MockedTpmProvider) NvRead(tagSecretKey string, authHandle uint32, nvIndex uint32) ([]byte, error) {
+	args := mockedTpm.Called(tagSecretKey, authHandle, nvIndex)
 	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (mockedTpm MockedTpmProvider) NvWrite(ownerSecretKey string, nvIndex uint32, data []byte) error {
-	args := mockedTpm.Called(ownerSecretKey, nvIndex, data)
+func (mockedTpm MockedTpmProvider) NvWrite(tagSecretKey string, authHandle uint32, nvIndex uint32, data []byte) error {
+	args := mockedTpm.Called(tagSecretKey, authHandle, nvIndex, data)
 	return args.Error(0)
 }
 
@@ -103,13 +103,13 @@ func (mockedTpm MockedTpmProvider) CreatePrimaryHandle(ownerSecretKey string, ha
 	return args.Error(0)
 }
 
-func (mockedTpm MockedTpmProvider) CreateSigningKey(signingSecretKey string, aikSecretKey string) (*CertifiedKey, error) {
-	args := mockedTpm.Called(signingSecretKey, aikSecretKey)
+func (mockedTpm MockedTpmProvider) CreateSigningKey(signingSecretKey string) (*CertifiedKey, error) {
+	args := mockedTpm.Called(signingSecretKey)
 	return args.Get(0).(*CertifiedKey), args.Error(1)
 }
 
-func (mockedTpm MockedTpmProvider) CreateBindingKey(bindingSecretKey string, aikSecretKey string) (*CertifiedKey, error) {
-	args := mockedTpm.Called(bindingSecretKey, aikSecretKey)
+func (mockedTpm MockedTpmProvider) CreateBindingKey(bindingSecretKey string) (*CertifiedKey, error) {
+	args := mockedTpm.Called(bindingSecretKey)
 	return args.Get(0).(*CertifiedKey), args.Error(1)
 }
 

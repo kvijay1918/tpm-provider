@@ -20,7 +20,7 @@ type CertifiedKey struct {
 // provides go visibility to values defined in tpm.h (shared with c code)
 const (
 	None = C.TPM_VERSION_UNKNOWN
-	V12  = C.TPM_VERSION_10 // KWT: not supported, remove
+	V12  = C.TPM_VERSION_10
 	V20  = C.TPM_VERSION_20
 
 	NV_IDX_RSA_ENDORSEMENT_CERTIFICATE = C.NV_IDX_RSA_ENDORSEMENT_CERTIFICATE
@@ -30,6 +30,7 @@ const (
 	TPM_HANDLE_AIK                     = C.TPM_HANDLE_AIK
 	TPM_HANDLE_EK                      = C.TPM_HANDLE_EK
 	TPM_HANDLE_PRIMARY                 = C.TPM_HANDLE_PRIMARY
+	TPM2_RH_OWNER                      = 0x40000001
 
 	Binding = C.TPM_CERTIFIED_KEY_USAGE_BINDING
 	Signing = C.TPM_CERTIFIED_KEY_USAGE_SIGNING
@@ -74,7 +75,7 @@ type TpmProvider interface {
 	//
 	// Used by the go-trust-agent allocate an AIK in the TPM.
 	//
-	CreateAik(ownerSecretKey string, aikSecretKey string) error
+	CreateAik(ownerSecretKey string) error
 
 	//
 	// Used by the go-trust-agent to facilitate handshakes with HVS
@@ -91,12 +92,12 @@ type TpmProvider interface {
 	//
 	// Used by the go-trust-agent to decrypt HVS data.
 	//
-	ActivateCredential(ownerSecretKey string, aikSecretKey string, credentialBytes []byte, secretBytes []byte) ([]byte, error)
+	ActivateCredential(ownerSecretKey string, credentialBytes []byte, secretBytes []byte) ([]byte, error)
 
 	//
 	// Used by the go-trust-agent to collect a tpm quote.
 	//
-	GetTpmQuote(aikSecretKey string, nonce []byte, pcrBanks []string, pcrs []int) ([]byte, error)
+	GetTpmQuote(nonce []byte, pcrBanks []string, pcrs []int) ([]byte, error)
 
 	//
 	// Checks to see if data has been written to nvram at 'nvIndex'
@@ -104,9 +105,10 @@ type TpmProvider interface {
 	NvIndexExists(nvIndex uint32) (bool, error)
 
 	//
-	// Allocate nvram of size 'indexSize' at 'nvIndex'
+	// Allocate nvram of size 'indexSize' at 'nvIndex'.  Creates the index using the
+	// TPM2_RH_OWNER handle.
 	//
-	NvDefine(ownerSecretKey string, nvIndex uint32, indexSize uint16) error
+	NvDefine(ownerSecretKey string, tagSecretKey string, nvIndex uint32, nvSize uint16) error
 
 	//
 	// Deletes data at nvram index 'nvIndex'
@@ -114,14 +116,17 @@ type TpmProvider interface {
 	NvRelease(ownerSecretKey string, nvIndex uint32) error
 
 	//
-	// Reads data at nvram index 'nvIndex'
+	// Reads data at nvram index 'nvIndex', using password 'indexSecretKey' to access
+	// the nv index (ex. the owner-secret for EK certificate or tag-secret for
+	// asset tag nvram).
 	//
-	NvRead(tpmOwnerSecretKey string, nvIndex uint32) ([]byte, error)
+	NvRead(indexSecretKey string, authHandle uint32, nvIndex uint32) ([]byte, error)
 
 	//
-	// Writes data to nvram index 'nvIndex'
+	// Writes data to nvram index 'nvIndex', using password 'indexSecretKey' to access
+	// the nv index.
 	//
-	NvWrite(ownerSecretKey string, nvIndex uint32, data []byte) error
+	NvWrite(indexSecretKey string, authHandle uint32, nvIndex uint32, data []byte) error
 
 	//
 	// Used to allocate a primary key in the TPM hiearchy that can be used by WLA to
@@ -133,13 +138,13 @@ type TpmProvider interface {
 	// Provided valid signing/aik secret keys for the TPM, creates a CertifiedKey
 	// that can be used for signing.
 	//
-	CreateSigningKey(signingSecretKey string, aikSecretKey string) (*CertifiedKey, error)
+	CreateSigningKey(signingSecretKey string) (*CertifiedKey, error)
 
 	//
 	// Provided valid binding/aik secret keys for the TPM, creates a CertifiedKey
 	// that can be used for binding.
 	//
-	CreateBindingKey(bindingSecretKey string, aikSecretKey string) (*CertifiedKey, error)
+	CreateBindingKey(bindingSecretKey string) (*CertifiedKey, error)
 
 	//
 	// Used by WLA to decrypt data in 'encryptedData' (using the CertifiedKey generated

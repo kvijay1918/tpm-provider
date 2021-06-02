@@ -22,7 +22,7 @@ int InitializeTpmAuth(TPM2B_AUTH* auth, const char* secretKey, size_t secretKeyL
         return -1;
     }
 
-    if(secretKeyLength == 0 || secretKeyLength > ARRAY_SIZE(auth->buffer))
+    if(secretKeyLength > ARRAY_SIZE(auth->buffer))
     {
         ERROR("Invalid secret key length: %ld", secretKeyLength);
         return -1;

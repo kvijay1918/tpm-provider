@@ -9,7 +9,6 @@ package tpmprovider
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"runtime"
 )
@@ -30,7 +29,6 @@ func NewTpmFactory() (TpmFactory, error) {
 		conf = "host=localhost,port=" + port
 	}
 
-	fmt.Printf("Creating MSSIM TpmFactory using conf '%s'\n", conf)
 	if runtime.GOOS == "linux" {
 		return linuxTpmFactory{tctiType: TCTI_MSSIM, conf: conf}, nil
 	} else {

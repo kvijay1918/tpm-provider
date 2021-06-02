@@ -200,20 +200,18 @@ static int getpubak(TSS2_SYS_CONTEXT *sys,
 //
 // tpm2_getpubek -e hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef -o hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef -H 0x81010000 -g 0x1 -f /tmp/endorsementKey
 // tpm2_readpublic -H 0x81010000 -o /tmp/endorsementkeyecpub
-// tpm2_getpubak -e hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef -o hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef -P hex:beeffeedbeeffeedbeeffeedbeeffeedbeeffeed -E 0x81010000 -k 0x81018000 -f /tmp/aik -n /tmp/aikName -g 0x1
+// tpm2_getpubak -e hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef -o hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef -E 0x81010000 -k 0x81018000 -f /tmp/aik -n /tmp/aikName -g 0x1
 // 
 //-------------------------------------------------------------------------------------------------
 int CreateAik(const tpmCtx* ctx, 
               const uint8_t* ownerSecretKey, 
-              size_t ownerSecretKeyLength, 
-              const uint8_t* aikSecretKey, 
-              size_t aikSecretKeyLength)
+              size_t ownerSecretKeyLength) 
 {
 
     TSS2_RC     rval;
     TPM2_HANDLE handle2048rsa = 0;
     TPM2B_AUTH  ownerAuth = {0};
-    TPM2B_AUTH  aikAuth = {0};
+    TPM2B_AUTH  aikAuth = {0};  // provide empty aik secret so no password is needed
 
     rval = InitializeTpmAuth(&ownerAuth, ownerSecretKey, ownerSecretKeyLength);
     if(rval != 0)
@@ -222,13 +220,7 @@ int CreateAik(const tpmCtx* ctx,
         return rval;
     }
 
-    rval = InitializeTpmAuth(&aikAuth, aikSecretKey, aikSecretKeyLength);
-    if(rval != 0)
-    {
-        ERROR("There was an error creating the aik secret");
-        return rval;
-    } 
-
+ 
     //
     // tpm2_getpubak -e hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef -o hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef -P hex:beeffeedbeeffeedbeeffeedbeeffeedbeeffeed -E 0x81010000 -k 0x81018000 -f /tmp/aik -n /tmp/aikName
     //

@@ -151,23 +151,16 @@ func (t *tpm20Linux) GetAikName() ([]byte, error) {
 	return returnValue, nil
 }
 
-func (t *tpm20Linux) CreateAik(ownerSecretKey string, aikSecretKey string) error {
+func (t *tpm20Linux) CreateAik(ownerSecretKey string) error {
 
 	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
 	if err != nil {
 		return errors.Wrap(err, INVALID_OWNER_SECRET_KEY)
 	}
 
-	aikSecretKeyBytes, err := validateAndConvertKey(aikSecretKey)
-	if err != nil {
-		return errors.Wrap(err, INVALID_AIK_SECRET_KEY)
-	}
-
 	rc := C.CreateAik(t.tpmCtx,
 		(*C.uint8_t)(unsafe.Pointer(&ownerSecretKeyBytes[0])),
-		C.size_t(len(ownerSecretKeyBytes)),
-		(*C.uint8_t)(unsafe.Pointer(&aikSecretKeyBytes[0])),
-		C.size_t(len(aikSecretKeyBytes)))
+		C.size_t(len(ownerSecretKeyBytes)))
 
 	if rc != 0 {
 		return fmt.Errorf("An error occurred in CreateAik: %w", NewTpmProviderError(int(rc)))
@@ -206,20 +199,6 @@ func (t *tpm20Linux) CreateAik(ownerSecretKey string, aikSecretKey string) error
 //
 // Provided it's easier to adapt those parameters to what Tss2 wants, let's do the conversion
 // here.
-//
-// Yes, we could reference tss2_tpm2_types.h and build those structures directly
-// in go.  But, this is the only application specific function that requires structured
-// parameters -- the intent was to hide the Tss2 dependencies in tpm20linux.h (not tpm.h)
-// so that we could plug in other native implementations (ex. tpm20windows.h could use
-// TSS MSR c++).
-//
-// Is it the right approach for layering? Maybe not, but we're in the red zone and we're
-// gonna stick with it.  Let's build the TPML_PCR_SELECTION structure and pass it in as
-// bytes, c will cast it to the structure.
-//
-// KWT:  Reevaluate layering.  Could be tpm.go (interface) -> tpm20linux.go (translates go
-// parameters tss2 structures) -> tss2 call. Right now it is tpm.go -> tpm20linux.go -> c code
-// (translation of raw buffers to tss structures) -> tss2 call.
 func getPcrSelectionBytes(pcrBanks []string, pcrs []int) ([]byte, error) {
 
 	buf := make([]byte, 132) // create a fixed size buffer for TPML_PCR_SELECTION
@@ -266,16 +245,11 @@ func getPcrSelectionBytes(pcrBanks []string, pcrs []int) ([]byte, error) {
 	return buf, nil
 }
 
-func (t *tpm20Linux) GetTpmQuote(aikSecretKey string, nonce []byte, pcrBanks []string, pcrs []int) ([]byte, error) {
+func (t *tpm20Linux) GetTpmQuote(nonce []byte, pcrBanks []string, pcrs []int) ([]byte, error) {
 
 	var quoteBytes []byte
 	var cQuote *C.uint8_t
 	var cQuoteLength C.int
-
-	aikSecretKeyBytes, err := validateAndConvertKey(aikSecretKey)
-	if err != nil {
-		return nil, errors.Wrap(err, INVALID_AIK_SECRET_KEY)
-	}
 
 	// create a buffer that describes the pcr selection that can be
 	// used by tss2
@@ -285,8 +259,6 @@ func (t *tpm20Linux) GetTpmQuote(aikSecretKey string, nonce []byte, pcrBanks []s
 	}
 
 	rc := C.GetTpmQuote(t.tpmCtx,
-		(*C.uint8_t)(unsafe.Pointer(&aikSecretKeyBytes[0])),
-		C.size_t(len(aikSecretKeyBytes)),
 		(*C.uint8_t)(unsafe.Pointer(&pcrSelectionBytes[0])),
 		C.size_t(len(pcrSelectionBytes)),
 		(*C.uint8_t)(unsafe.Pointer(&nonce[0])),
@@ -308,7 +280,7 @@ func (t *tpm20Linux) GetTpmQuote(aikSecretKey string, nonce []byte, pcrBanks []s
 	return quoteBytes, nil
 }
 
-func (t *tpm20Linux) ActivateCredential(ownerSecretKey string, aikSecretKey string, credentialBytes []byte, secretBytes []byte) ([]byte, error) {
+func (t *tpm20Linux) ActivateCredential(ownerSecretKey string, credentialBytes []byte, secretBytes []byte) ([]byte, error) {
 
 	var returnValue []byte
 	var decrypted *C.uint8_t
@@ -319,16 +291,9 @@ func (t *tpm20Linux) ActivateCredential(ownerSecretKey string, aikSecretKey stri
 		return nil, errors.Wrap(err, INVALID_OWNER_SECRET_KEY)
 	}
 
-	aikSecretKeyBytes, err := validateAndConvertKey(aikSecretKey)
-	if err != nil {
-		return nil, errors.Wrap(err, INVALID_AIK_SECRET_KEY)
-	}
-
 	rc := C.ActivateCredential(t.tpmCtx,
 		(*C.uint8_t)(unsafe.Pointer(&ownerSecretKeyBytes[0])),
 		C.size_t(len(ownerSecretKeyBytes)),
-		(*C.uint8_t)(unsafe.Pointer(&aikSecretKeyBytes[0])),
-		C.size_t(len(aikSecretKeyBytes)),
 		(*C.uint8_t)(unsafe.Pointer(&credentialBytes[0])),
 		C.size_t(len(credentialBytes)),
 		(*C.uint8_t)(unsafe.Pointer(&secretBytes[0])),
@@ -350,9 +315,14 @@ func (t *tpm20Linux) ActivateCredential(ownerSecretKey string, aikSecretKey stri
 	return returnValue, nil
 }
 
-func (t *tpm20Linux) NvDefine(ownerSecretKey string, nvIndex uint32, indexSize uint16) error {
+func (t *tpm20Linux) NvDefine(ownerSecretKey string, tagSecretKey string, nvIndex uint32, nvSize uint16) error {
 
 	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
+	if err != nil {
+		return errors.Wrap(err, INVALID_OWNER_SECRET_KEY)
+	}
+
+	tagSecretKeyBytes, err := validateAndConvertKey(tagSecretKey)
 	if err != nil {
 		return errors.Wrap(err, INVALID_OWNER_SECRET_KEY)
 	}
@@ -360,11 +330,13 @@ func (t *tpm20Linux) NvDefine(ownerSecretKey string, nvIndex uint32, indexSize u
 	rc := C.NvDefine(t.tpmCtx,
 		(*C.uint8_t)(unsafe.Pointer(&ownerSecretKeyBytes[0])),
 		C.size_t(len(ownerSecretKeyBytes)),
+		(*C.uint8_t)(unsafe.Pointer(&tagSecretKeyBytes[0])),
+		C.size_t(len(tagSecretKeyBytes)),
 		C.uint32_t(nvIndex),
-		C.uint16_t(indexSize))
+		C.uint16_t(nvSize))
 
 	if rc != 0 {
-		return fmt.Errorf("C.NvRead returned error code 0x%X", rc)
+		return fmt.Errorf("C.NVDefine returned error code 0x%X", rc)
 	}
 
 	return nil
@@ -389,20 +361,21 @@ func (t *tpm20Linux) NvRelease(ownerSecretKey string, nvIndex uint32) error {
 	return nil
 }
 
-func (t *tpm20Linux) NvRead(ownerSecretKey string, nvIndex uint32) ([]byte, error) {
+func (t *tpm20Linux) NvRead(indexSecretKey string, authHandle uint32, nvIndex uint32) ([]byte, error) {
 
 	var returnValue []byte
 	var nvData *C.uint8_t
 	var nvDataLength C.int
 
-	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
+	indexSecretKeyBytes, err := validateAndConvertKey(indexSecretKey)
 	if err != nil {
 		return nil, errors.Wrap(err, INVALID_OWNER_SECRET_KEY)
 	}
 
 	rc := C.NvRead(t.tpmCtx,
-		(*C.uint8_t)(unsafe.Pointer(&ownerSecretKeyBytes[0])),
-		C.size_t(len(ownerSecretKeyBytes)),
+		(*C.uint8_t)(unsafe.Pointer(&indexSecretKeyBytes[0])),
+		C.size_t(len(indexSecretKeyBytes)),
+		C.uint32_t(authHandle),
 		C.uint32_t(nvIndex),
 		&nvData,
 		&nvDataLength)
@@ -421,9 +394,9 @@ func (t *tpm20Linux) NvRead(ownerSecretKey string, nvIndex uint32) ([]byte, erro
 	return returnValue, nil
 }
 
-func (t *tpm20Linux) NvWrite(ownerSecretKey string, handle uint32, data []byte) error {
+func (t *tpm20Linux) NvWrite(indexSecretKey string, authHandle uint32, nvIndex uint32, data []byte) error {
 
-	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
+	indexSecretKeyBytes, err := validateAndConvertKey(indexSecretKey)
 	if err != nil {
 		return errors.Wrap(err, INVALID_OWNER_SECRET_KEY)
 	}
@@ -433,9 +406,10 @@ func (t *tpm20Linux) NvWrite(ownerSecretKey string, handle uint32, data []byte) 
 	}
 
 	rc := C.NvWrite(t.tpmCtx,
-		(*C.uint8_t)(unsafe.Pointer(&ownerSecretKeyBytes[0])),
-		C.size_t(len(ownerSecretKeyBytes)),
-		C.uint32_t(handle),
+		(*C.uint8_t)(unsafe.Pointer(&indexSecretKeyBytes[0])),
+		C.size_t(len(indexSecretKeyBytes)),
+		C.uint32_t(authHandle),
+		C.uint32_t(nvIndex),
 		(*C.uint8_t)(unsafe.Pointer(&data[0])),
 		C.size_t(len(data)))
 
@@ -450,7 +424,7 @@ func (tpm *tpm20Linux) NvIndexExists(nvIndex uint32) (bool, error) {
 
 	rc := C.NvIndexExists(tpm.tpmCtx, C.uint(nvIndex))
 	if rc == -1 {
-		return false, nil // KWT:  Differentiate between and error and index not there
+		return false, nil
 	}
 
 	if rc != 0 {
@@ -498,24 +472,19 @@ func (tpm *tpm20Linux) CreateEk(ownerSecretKey string, handle uint32) error {
 	return nil
 }
 
-func (t *tpm20Linux) CreateSigningKey(signingSecretKey string, aikSecretKey string) (*CertifiedKey, error) {
-	return t.createCertifiedKey(signingSecretKey, aikSecretKey, C.TPM_CERTIFIED_KEY_USAGE_SIGNING)
+func (t *tpm20Linux) CreateSigningKey(signingSecretKey string) (*CertifiedKey, error) {
+	return t.createCertifiedKey(signingSecretKey, C.TPM_CERTIFIED_KEY_USAGE_SIGNING)
 }
 
-func (t *tpm20Linux) CreateBindingKey(bindingSecretKey string, aikSecretKey string) (*CertifiedKey, error) {
-	return t.createCertifiedKey(bindingSecretKey, aikSecretKey, C.TPM_CERTIFIED_KEY_USAGE_BINDING)
+func (t *tpm20Linux) CreateBindingKey(bindingSecretKey string) (*CertifiedKey, error) {
+	return t.createCertifiedKey(bindingSecretKey, C.TPM_CERTIFIED_KEY_USAGE_BINDING)
 }
 
-func (t *tpm20Linux) createCertifiedKey(keySecret string, aikSecretKey string, keyUsage int) (*CertifiedKey, error) {
+func (t *tpm20Linux) createCertifiedKey(keySecret string, keyUsage int) (*CertifiedKey, error) {
 
 	keySecretBytes, err := validateAndConvertKey(keySecret)
 	if err != nil {
 		return nil, errors.Wrap(err, "Invalid secret key")
-	}
-
-	aikSecretKeyBytes, err := validateAndConvertKey(aikSecretKey)
-	if err != nil {
-		return nil, errors.Wrap(err, INVALID_AIK_SECRET_KEY)
 	}
 
 	var key C.CertifiedKey
@@ -524,9 +493,7 @@ func (t *tpm20Linux) createCertifiedKey(keySecret string, aikSecretKey string, k
 		&key,
 		C.TPM_CERTIFIED_KEY_USAGE(keyUsage),
 		(*C.uint8_t)(unsafe.Pointer(&keySecretBytes[0])),
-		C.size_t(len(keySecretBytes)),
-		(*C.uint8_t)(unsafe.Pointer(&aikSecretKeyBytes[0])),
-		C.size_t(len(aikSecretKeyBytes)))
+		C.size_t(len(keySecretBytes)))
 
 	if rc == 0 {
 		defer C.free(unsafe.Pointer(key.publicKey.buffer))
@@ -686,17 +653,19 @@ func (t *tpm20Linux) IsValidEk(ownerSecretKey string, handle uint32, nvIndex uin
 }
 
 func validateAndConvertKey(key string) ([]byte, error) {
-	if key == "" {
-		return nil, errors.New("The secret key cannot be empty")
-	}
-
-	if len(key) != 40 {
-		return nil, errors.New("The secret key length is invalid")
-	}
 
 	keyBytes, err := hex.DecodeString(key)
 	if err != nil {
 		return nil, errors.Wrap(err, "The secret key is not in a valid hex format")
+	}
+
+	// The tss library uses TP2B_AUTH structure for passwords (basically a length and
+	// fixed length buffer).  The tpmprovider uses zero-copy to pass the passwords
+	// into the C code.  If the password wasn't provided, return an array that contains
+	// a single zero.  When passed to the C code, the TPM2B_AUTH will be an empty
+	// password.
+	if keyBytes == nil || len(keyBytes) == 0 {
+		keyBytes = []byte{0}
 	}
 
 	return keyBytes, nil

@@ -1,3 +1,5 @@
+// +build unit_test
+
 /*
  * Copyright (C) 2020 Intel Corporation
  * SPDX-License-Identifier: BSD-3-Clause
@@ -205,12 +207,12 @@ func (simulator *tpmSimulator) ProvisionEkCertificate(tpmProvider TpmProvider, o
 	//
 	// Save the EK Certificate to the default nv index
 	//
-	err = tpmProvider.NvDefine(ownerSecretKey, NV_IDX_RSA_ENDORSEMENT_CERTIFICATE, uint16(len(ekCertificateBytes)))
+	err = tpmProvider.NvDefine(ownerSecretKey, ownerSecretKey, NV_IDX_RSA_ENDORSEMENT_CERTIFICATE, uint16(len(ekCertificateBytes)))
 	if err != nil {
 		return err
 	}
 
-	err = tpmProvider.NvWrite(ownerSecretKey, NV_IDX_RSA_ENDORSEMENT_CERTIFICATE, ekCertificateBytes)
+	err = tpmProvider.NvWrite(ownerSecretKey, NV_IDX_RSA_ENDORSEMENT_CERTIFICATE, NV_IDX_RSA_ENDORSEMENT_CERTIFICATE, ekCertificateBytes)
 	if err != nil {
 		return err
 	}

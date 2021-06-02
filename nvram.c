@@ -53,12 +53,14 @@ static int GetMaxNvBufferSize(TSS2_SYS_CONTEXT* sys, uint32_t* size)
 int NvDefine(const tpmCtx* ctx, 
              const uint8_t* ownerSecretKey, 
              size_t ownerSecretKeyLength, 
-             uint32_t nvIndex, 
+             const uint8_t* indexSecretKey, 
+             size_t indexSecretKeyLength, 
+             uint32_t nvIndex,
              uint16_t nvSize)
 {
     TSS2_RC                 rval;
     TPM2B_NV_PUBLIC         publicInfo = TPM2B_EMPTY_INIT;
-    TPM2B_AUTH              nvOwnerAuth = {0};
+    TPM2B_AUTH              indexAuth = {0};
     TSS2L_SYS_AUTH_RESPONSE sessionDataOut;
     TSS2L_SYS_AUTH_COMMAND  sessionData = {0};
  
@@ -70,7 +72,7 @@ int NvDefine(const tpmCtx* ctx,
         return rval;
     }
 
-    rval = InitializeTpmAuth(&nvOwnerAuth, ownerSecretKey, ownerSecretKeyLength);
+    rval = InitializeTpmAuth(&indexAuth, indexSecretKey, indexSecretKeyLength);
     if (rval != 0) 
     {
         return rval;
@@ -80,9 +82,9 @@ int NvDefine(const tpmCtx* ctx,
     publicInfo.nvPublic.dataSize = nvSize;
     publicInfo.nvPublic.nvIndex = nvIndex;
     publicInfo.nvPublic.nameAlg = TPM2_ALG_SHA256;
-    publicInfo.nvPublic.attributes = TPMA_NV_OWNERWRITE | TPMA_NV_POLICYWRITE | TPMA_NV_OWNERREAD;
+    publicInfo.nvPublic.attributes = TPMA_NV_AUTHWRITE | TPMA_NV_AUTHREAD | TPMA_NV_OWNERREAD;
     
-    rval = Tss2_Sys_NV_DefineSpace(ctx->sys, TPM2_RH_OWNER, &sessionData, &nvOwnerAuth, &publicInfo, &sessionDataOut);
+    rval = Tss2_Sys_NV_DefineSpace(ctx->sys, TPM2_RH_OWNER, &sessionData, &indexAuth, &publicInfo, &sessionDataOut);
     if (rval != TPM2_RC_SUCCESS) 
     {
         ERROR("Tss2_Sys_NV_DefineSpace returned error: 0x%x", rval);
@@ -138,8 +140,9 @@ int NvIndexExists(const tpmCtx* ctx, uint32_t nvIndex)
 
 
 int NvRead(const tpmCtx* ctx, 
-           const uint8_t* ownerSecretKey, 
-           size_t ownerSecretKeyLength, 
+           const uint8_t* indexSecretKey, 
+           size_t indexSecretKeyLength, 
+           uint32_t authHandle,
            uint32_t nvIndex, 
            uint8_t** const nvBytes, 
            int* const nvBytesLength)
@@ -158,7 +161,7 @@ int NvRead(const tpmCtx* ctx,
 
     sessionData.count = 1;
     sessionData.auths[0].sessionHandle = TPM2_RS_PW;
-    rval = InitializeTpmAuth(&sessionData.auths[0].hmac, ownerSecretKey, ownerSecretKeyLength);
+    rval = InitializeTpmAuth(&sessionData.auths[0].hmac, indexSecretKey, indexSecretKeyLength);
     if (rval != 0) 
     {
         return rval;
@@ -196,7 +199,7 @@ int NvRead(const tpmCtx* ctx,
             len = nvBufferSize - off;
         }
 
-        rval = Tss2_Sys_NV_Read(ctx->sys, TPM2_RH_OWNER, nvIndex, &sessionData, len, off, &nvData, &sessionsDataOut);
+        rval = Tss2_Sys_NV_Read(ctx->sys, authHandle, nvIndex, &sessionData, len, off, &nvData, &sessionsDataOut);
         if (rval != TSS2_RC_SUCCESS) 
         {
             ERROR("Tss2_Sys_NV_Read returned: 0x%x", rval);
@@ -223,8 +226,9 @@ int NvRead(const tpmCtx* ctx,
 
 
 int NvWrite(const tpmCtx* ctx, 
-            const uint8_t* ownerSecretKey, 
-            size_t ownerSecretKeyLength, 
+            const uint8_t* indexSecretKey, 
+            size_t indexSecretKeyLength, 
+            uint32_t authHandle,
             uint32_t nvIndex, 
             const uint8_t* nvBytes, 
             size_t nvBytesLength)
@@ -240,7 +244,7 @@ int NvWrite(const tpmCtx* ctx,
 
     sessionData.count = 1;
     sessionData.auths[0].sessionHandle = TPM2_RS_PW;
-    rval = InitializeTpmAuth(&sessionData.auths[0].hmac, ownerSecretKey, ownerSecretKeyLength);
+    rval = InitializeTpmAuth(&sessionData.auths[0].hmac, indexSecretKey, indexSecretKeyLength);
     if (rval != 0) 
     {
         return rval;
@@ -259,7 +263,7 @@ int NvWrite(const tpmCtx* ctx,
 
         memcpy(nvWriteData.buffer, (nvBytes + pos), nvWriteData.size);
 
-        rval = Tss2_Sys_NV_Write(ctx->sys, TPM2_RH_OWNER, nvIndex, &sessionData, &nvWriteData, (uint16_t)pos, &sessionDataOut);
+        rval = TSS2_RETRY_EXP(Tss2_Sys_NV_Write(ctx->sys, authHandle, nvIndex, &sessionData, &nvWriteData, (uint16_t)pos, &sessionDataOut));
         if (rval != TSS2_RC_SUCCESS) 
         {
             ERROR("Tss2_Sys_NV_Write returned error:0x%x", rval);

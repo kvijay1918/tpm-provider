@@ -18,7 +18,7 @@ static int GetEkCertificatePublicBytesRSA(const tpmCtx* ctx, TPM2B_AUTH *ownerAu
     const unsigned char* tmp;
 
     DEBUG("Getting EK Certificate public key from nv index 0x%x", ekCertIndex)
-    rval = NvRead(ctx, (uint8_t*)ownerAuth->buffer, ownerAuth->size, ekCertIndex, &nvBytes, &nvLength);
+    rval = NvRead(ctx, (uint8_t*)ownerAuth->buffer, ownerAuth->size, TPM2_RH_OWNER, ekCertIndex, &nvBytes, &nvLength);
     if (rval != TPM2_RC_SUCCESS) 
     {
         ERROR("Could not read EK Certificate at index 0x%x.  NvRead returned 0x%x", ekCertIndex, rval);

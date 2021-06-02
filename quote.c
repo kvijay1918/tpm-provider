@@ -150,7 +150,6 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
     bufferSize = sizeof(uint16_t) + quote->size + (sizeof(uint16_t)*3) + signature->signature.rsassa.sig.size;
 
     // Use pcrSelection to determine the number of bytes needed to store the pcr measurements.
-    // KWT:  Use the data in the quote for pcr selection and drop 'pcrSelection' parameter...
     for (int i = 0; i < pcrSelection->count; i++)
     {
         switch(pcrSelection->pcrSelections[i].hash)
@@ -255,8 +254,6 @@ static int CreateQuoteBuffer(TPM2B_ATTEST* quote,
 }
 
 int GetTpmQuote(const tpmCtx* ctx, 
-                const uint8_t* aikSecretKey, 
-                size_t aikSecretKeyLength, 
                 const uint8_t* pcrSelectionBytes,
                 size_t pcrSelectionBytesLength,
                 const uint8_t* qualifyingDataBytes,
@@ -265,21 +262,13 @@ int GetTpmQuote(const tpmCtx* ctx,
                 int* const quoteBytesLength)
 {
     TSS2_RC             rval;
-    TPM2B_AUTH          aikPassword = {0};                                      // For getting the qoute 
+    TPM2B_AUTH          aikPassword = {0};                                      // Use empty auth for quote (as provisioned by the Trust-Agent) 
     TPM2B_ATTEST        quote = TPM2B_TYPE_INIT(TPM2B_ATTEST, attestationData); // quote data from TPM
     TPMT_SIGNATURE      signature = {0};                                        // signature data from TPM
     TPML_PCR_SELECTION* pcrSelection;                                           // which banks/pcrs to collect (from HVS request)
     TPM2B_DATA          qualifyingData = {0};                                   // the 'nonce' from HVS
     TPML_DIGEST         pcrMeasurements[DEFAULT_PCR_MEASUREMENT_COUNT] = {0};    // pcr measurements from TPM
     size_t              pcrsCollectedCount = 0;                                 // number of pcr measurements collected
-
-    // KWT: the aik is required on rhel8, but fails when set in the simulator
-    rval = InitializeTpmAuth(&aikPassword, aikSecretKey, aikSecretKeyLength);
-    if(rval != 0)
-    {
-        ERROR("There was an error creating the aik TPM2B_AUTH");
-        return rval;
-    }
 
     if (pcrSelectionBytes == NULL || pcrSelectionBytesLength == 0 || pcrSelectionBytesLength > sizeof(TPML_PCR_SELECTION))
     {
@@ -303,7 +292,7 @@ int GetTpmQuote(const tpmCtx* ctx,
     //
     rval = getQuote(ctx->sys, 
                     &aikPassword,       
-                    TPM_HANDLE_AIK,     // KWT: don't pass, move to getQuote
+                    TPM_HANDLE_AIK,
                     pcrSelection, 
                     &qualifyingData, 
                     &quote, 

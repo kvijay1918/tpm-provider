@@ -91,9 +91,7 @@ int IsOwnedWithAuth(const tpmCtx* ctx,
 
 int CreateAik(const tpmCtx* ctx, 
               const uint8_t* ownerSecretKey, 
-              size_t ownerSecretKeyLength, 
-              const uint8_t* aikSecretKey, 
-              size_t aikSecretKeyLength);
+              size_t ownerSecretKeyLength); 
 
 int GetAikBytes(const tpmCtx* ctx, 
                 uint8_t** const aikBytes, 
@@ -104,8 +102,6 @@ int GetAikName(const tpmCtx* ctx,
                int* const aikNameLength);
 
 int GetTpmQuote(const tpmCtx* ctx, 
-                const uint8_t* aikSecretKey, 
-                size_t aikSecretKeyLength, 
                 const uint8_t* pcrSelectionBytes,
                 size_t pcrSelectionBytesLength,
                 const uint8_t* qualifyingDataString,
@@ -116,8 +112,6 @@ int GetTpmQuote(const tpmCtx* ctx,
 int ActivateCredential(const tpmCtx* ctx, 
                        const uint8_t* ownerSecretKey, 
                        size_t ownerSecretKeyLength,
-                       const uint8_t* aikSecretKey, 
-                       size_t aikSecretKeyLength,
                        const uint8_t* credentialBytes, 
                        size_t credentialBytesLength,
                        const uint8_t* secretBytes, 
@@ -138,21 +132,25 @@ int CreateEk(const tpmCtx* ctx,
 int NvIndexExists(const tpmCtx* ctx, uint32_t nvIndex);
 
 int NvDefine(const tpmCtx* ctx, 
-             const uint8_t* ownerSecretKey, 
+             const uint8_t* ownerSecretKey,
              size_t ownerSecretKeyLength, 
+             const uint8_t* indexSecretKey, 
+             size_t indexSecretKeyLength, 
              uint32_t nvIndex, 
              uint16_t nvSize);
 
 int NvRead(const tpmCtx* ctx, 
-           const uint8_t* ownerSecretKey, 
-           size_t ownerSecretKeyLength, 
+           const uint8_t* indexSecretKey, 
+           size_t indexSecretKeyLength, 
+           uint32_t authHandle,
            uint32_t nvIndex, 
            uint8_t** const nvBytes, 
            int* const nvBytesLength);
 
 int NvWrite(const tpmCtx* ctx, 
-            const uint8_t* ownerSecretKey, 
-            size_t ownerSecretKeyLength, 
+            const uint8_t* indexSecretKey, 
+            size_t indexSecretKeyLength, 
+            uint32_t authHandle,
             uint32_t nvIndex, 
             const uint8_t* nvBytes, 
             size_t nvBytesLength);
@@ -166,9 +164,7 @@ int CreateCertifiedKey(const tpmCtx* ctx,
                        CertifiedKey* keyOut, 
                        TPM_CERTIFIED_KEY_USAGE usage, 
                        const uint8_t* keySecret, 
-                       size_t keySecretLength, 
-                       const uint8_t* aikSecretKey, 
-                       size_t aikSecretKeyLength);
+                       size_t keySecretLength);
 
 int Unbind(const tpmCtx* ctx, 
            const uint8_t* bindingSecretKey, 

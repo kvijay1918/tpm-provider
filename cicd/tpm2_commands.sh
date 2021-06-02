@@ -24,7 +24,6 @@ LOCKOUT_AUTH=$OWNER_AUTH
 EK_HANDLE=0x81010000
 EK_PUB=$OUT_DIR/ek.pub
 READPUBLIC_EK_PUB=$OUT_DIR/ek_readpublic.pub
-AK_AUTH=hex:beefbeefbeefbeefbeefbeefbeefbeefbeefbeef
 AK_HANDLE=0x81018000
 WLA_HANDLE=0x81000000
 AK_PUB=$OUT_DIR/ak.pub
@@ -35,11 +34,7 @@ WLA_KEY_AUTH=hex:feedfeedfeedfeedfeedfeedfeedfeedfeedfeed
 
 TCTI_STR="tabrmd"
 
-if [ -d $OUT_DIR ]; then
-    rm -rf $OUT_DIR
-fi
-
-mkdir $OUT_DIR
+mkdir -p $OUT_DIR
 
 #--------------------------------------------------------------------------------------------------
 # Step 1: Take Ownership
@@ -56,8 +51,6 @@ tpm2_takeownership --tcti=$TCTI_STR \
 # from tasks.provision_aik.go
 #--------------------------------------------------------------------------------------------------
 tpm2_getpubek --tcti="$TCTI_STR" \
-    --endorse-passwd="$ENDORSE_AUTH" \
-    --owner-passwd="$OWNER_AUTH" \
     --handle="$EK_HANDLE" \
     --alg=rsa \
     --file="$EK_PUB"
@@ -69,8 +62,6 @@ tpm2_readpublic --tcti="$TCTI_STR" \
     --opu="$READPUBLIC_EK_PUB"
 
 tpm2_getpubak --tcti="$TCTI_STR" \
-    --endorse-passwd="$ENDORSE_AUTH" \
-    --owner-passwd="$OWNER_AUTH" \
     --ek-handle="$EK_HANDLE" \
     --ak-handle="$AK_HANDLE" \
     --file="$AK_PUB" \
@@ -78,12 +69,11 @@ tpm2_getpubak --tcti="$TCTI_STR" \
     --alg=rsa \
     --digest-alg=sha256 \
     --sign-alg=rsassa \
-    --ak-passwd="$AK_AUTH"
 
 #--------------------------------------------------------------------------------------------------
-# The generation of secret data, 'make_credential' and 'activate_credential' are simulated here 
-# -- the nonce is created by HVS, tasks.provision_aik.go uses 'ActivateCredential()' 
-# (activate_credential.c) to decrypt that data during the HVS handshakes performed in 
+# The generation of secret data, 'make_credential' and 'activate_credential' are simulated here
+# -- the nonce is created by HVS, tasks.provision_aik.go uses 'ActivateCredential()'
+# (activate_credential.c) to decrypt that data during the HVS handshakes performed in
 # tasks.provision_aik.go
 #--------------------------------------------------------------------------------------------------
 SECRET_DATA=$OUT_DIR/secret.data
@@ -99,8 +89,6 @@ tpm2_makecredential --tcti="$TCTI_STR" \
     --out-file=$CREDENTIAL 2>&1 >/dev/null
 
 tpm2_activatecredential --tcti="$TCTI_STR" \
-    --endorse-passwd="$ENDORSE_AUTH" \
-    --Password="$AK_AUTH" \
     --handle="$AK_HANDLE" \
     --key-handle="$EK_HANDLE" \
     --in-file="$CREDENTIAL" \
@@ -114,7 +102,7 @@ QUOTE_QUALIFY="b4781f450103d7ea58804669ab77590bd38d98109929dc75d0b12b4d9b3593f9"
 tpm2_quote --tcti="$TCTI_STR" \
     --ak-handle="$AK_HANDLE" \
     --sel-list="$QUOTE_PCRLIST" \
-    --qualify-data=$QUOTE_QUALIFY
+    --qualify-data=$QUOTE_QUALIFY \
     --ak-password="$AK_AUTH" \
 
 #
