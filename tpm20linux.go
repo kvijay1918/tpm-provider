@@ -688,9 +688,9 @@ func (t *tpm20Linux) IsPcrBankActive(pcrBank string) (bool, error) {
 	case Tss2RcSuccess:
 		return true, nil
 	case TPM_PROVIDER_INVALID_PCRSELECTION:
-		return false, NewTpmProviderError(int(rval))
+		return false, nil
 	case TPM_PROVIDER_INVALID_PCRCOUNT:
-		return true, NewTpmProviderError(int(rval))
+		return true, nil
 	default:
 		return false, NewTpmProviderError(int(rval))
 	}
