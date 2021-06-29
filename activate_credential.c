@@ -56,7 +56,7 @@ static int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys,
         return rval;
     }
 
-    rval = TSS2_RETRY_EXP(Tss2_Sys_PolicySecret(sys, TPM2_RH_ENDORSEMENT, sessionHandle, &cmd_auth_array_endorse, 0, 0, 0, 0, 0, 0, 0));
+    rval = Tss2_Sys_PolicySecret(sys, TPM2_RH_ENDORSEMENT, sessionHandle, &cmd_auth_array_endorse, 0, 0, 0, 0, 0, 0, 0);
     if (rval != TPM2_RC_SUCCESS) 
     {
         ERROR("Tss2_Sys_PolicySecret Error. TPM Error:0x%x", rval);
@@ -67,7 +67,7 @@ static int Tss2ActivateCredential(TSS2_SYS_CONTEXT* sys,
     cmd_auth_array_password.auths[1].sessionAttributes |= TPMA_SESSION_CONTINUESESSION;
     cmd_auth_array_password.auths[1].hmac.size = 0;
 
-    rval = TSS2_RETRY_EXP(Tss2_Sys_ActivateCredential(sys, TPM_HANDLE_AIK, TPM_HANDLE_EK, &cmd_auth_array_password, credentialBlob, secret, certInfoData, 0));
+    rval = Tss2_Sys_ActivateCredential(sys, TPM_HANDLE_AIK, TPM_HANDLE_EK, &cmd_auth_array_password, credentialBlob, secret, certInfoData, 0);
     if (rval != TPM2_RC_SUCCESS) 
     {
         ERROR("Tss2_Sys_ActivateCredential failed. TPM Error:0x%x", rval);

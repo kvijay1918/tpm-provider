@@ -263,7 +263,7 @@ int NvWrite(const tpmCtx* ctx,
 
         memcpy(nvWriteData.buffer, (nvBytes + pos), nvWriteData.size);
 
-        rval = TSS2_RETRY_EXP(Tss2_Sys_NV_Write(ctx->sys, authHandle, nvIndex, &sessionData, &nvWriteData, (uint16_t)pos, &sessionDataOut));
+        rval = Tss2_Sys_NV_Write(ctx->sys, authHandle, nvIndex, &sessionData, &nvWriteData, (uint16_t)pos, &sessionDataOut);
         if (rval != TSS2_RC_SUCCESS) 
         {
             ERROR("Tss2_Sys_NV_Write returned error:0x%x", rval);

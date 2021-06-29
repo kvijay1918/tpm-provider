@@ -109,19 +109,19 @@ int CreateCertifiedKey(const tpmCtx* ctx,
         return -1;
     }
     
-    rval = TSS2_RETRY_EXP(Tss2_Sys_Create(ctx->sys, 
-                                            TPM_HANDLE_PRIMARY, 
-                                            &sessionData,
-                                            &inSensitive,
-                                            &inPublic,
-                                            &outsideInfo,
-                                            &creationPcr,
-                                            &outPrivate,
-                                            &outPublic, 
-                                            &creationData, 
-                                            &creationHash, 
-                                            &creationTicket,
-                                            &sessionsDataOut));
+    rval = Tss2_Sys_Create(ctx->sys, 
+                            TPM_HANDLE_PRIMARY, 
+                            &sessionData,
+                            &inSensitive,
+                            &inPublic,
+                            &outsideInfo,
+                            &creationPcr,
+                            &outPrivate,
+                            &outPublic, 
+                            &creationData, 
+                            &creationHash, 
+                            &creationTicket,
+                            &sessionsDataOut);
 
     if (rval != TPM2_RC_SUCCESS) 
     {

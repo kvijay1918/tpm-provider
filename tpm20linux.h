@@ -63,19 +63,6 @@
 
 #define TPM2_ERROR_TSS2_RC_ERROR_MASK 0xFFFF
 
-/*
- * This macro is useful as a wrapper around SAPI functions to automatically
- * retry function calls when the RC is TPM2_RC_RETRY.
- */
-#define TSS2_RETRY_EXP(expression)                         \
-    ({                                                     \
-        TSS2_RC __result = 0;                              \
-        do {                                               \
-            __result = (expression);                       \
-        } while ((__result & TPM2_ERROR_TSS2_RC_ERROR_MASK) == TPM2_RC_RETRY); \
-        __result;                                          \
-    })
-
 #define LOG(fmt, ...) fprintf(stdout, "[LOG:%s::%d] " fmt "\n", __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__);
 #define ERROR(fmt, ...) fprintf(stderr, "[ERR:%s::%d] " fmt "\n", __FILE__, __LINE__ __VA_OPT__(,) __VA_ARGS__);
 

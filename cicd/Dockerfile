@@ -57,12 +57,20 @@ RUN cd /tmp \
     && rm -rf $GOLANG_TAR
 
 # build the tpm simulator
-RUN wget https://downloads.sourceforge.net/project/ibmswtpm2/ibmtpm1332.tar.gz \
-    && mkdir simulator \
+RUN mkdir simulator \
     && cd simulator \
-    && tar -xavf ../ibmtpm1332.tar.gz \
+    && wget -O ibmtpm.tar.gz https://downloads.sourceforge.net/project/ibmswtpm2/ibmtpm1661.tar.gz \
+    && tar -xavf ibmtpm.tar.gz \
     && cd src \
     && make
+
+# repo tool
+RUN ln -sf /usr/bin/python3 /usr/bin/python \
+    && ln -sf /usr/bin/pip3 /usr/bin/pip \
+    && tmpdir=$(mktemp -d) \
+    && git clone https://gerrit.googlesource.com/git-repo $tmpdir \
+    && install -m 755 $tmpdir/repo /usr/local/bin \
+    && rm -rf $tmpdir
 
 # update paths, env, proxy, etc.
 RUN echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
