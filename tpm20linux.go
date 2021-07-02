@@ -18,6 +18,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"unsafe"
 
 	"github.com/pkg/errors"
@@ -315,14 +316,14 @@ func (t *tpm20Linux) ActivateCredential(ownerSecretKey string, credentialBytes [
 	return returnValue, nil
 }
 
-func (t *tpm20Linux) NvDefine(ownerSecretKey string, tagSecretKey string, nvIndex uint32, nvSize uint16) error {
+func (t *tpm20Linux) NvDefine(ownerSecretKey string, indexSecretKey string, nvIndex uint32, nvSize uint16) error {
 
 	ownerSecretKeyBytes, err := validateAndConvertKey(ownerSecretKey)
 	if err != nil {
 		return errors.Wrap(err, INVALID_OWNER_SECRET_KEY)
 	}
 
-	tagSecretKeyBytes, err := validateAndConvertKey(tagSecretKey)
+	indexSecretKeyBytes, err := validateAndConvertKey(indexSecretKey)
 	if err != nil {
 		return errors.Wrap(err, INVALID_OWNER_SECRET_KEY)
 	}
@@ -330,8 +331,8 @@ func (t *tpm20Linux) NvDefine(ownerSecretKey string, tagSecretKey string, nvInde
 	rc := C.NvDefine(t.tpmCtx,
 		(*C.uint8_t)(unsafe.Pointer(&ownerSecretKeyBytes[0])),
 		C.size_t(len(ownerSecretKeyBytes)),
-		(*C.uint8_t)(unsafe.Pointer(&tagSecretKeyBytes[0])),
-		C.size_t(len(tagSecretKeyBytes)),
+		(*C.uint8_t)(unsafe.Pointer(&indexSecretKeyBytes[0])),
+		C.size_t(len(indexSecretKeyBytes)),
 		C.uint32_t(nvIndex),
 		C.uint16_t(nvSize))
 
@@ -654,17 +655,27 @@ func (t *tpm20Linux) IsValidEk(ownerSecretKey string, handle uint32, nvIndex uin
 
 func validateAndConvertKey(key string) ([]byte, error) {
 
-	keyBytes, err := hex.DecodeString(key)
-	if err != nil {
-		return nil, errors.Wrap(err, "The secret key is not in a valid hex format")
+	var keyBytes []byte
+	var err error
+
+	// tpm2-tools supports the use of 'hex' passwords.  Follow suit
+	// and convert passwords with a leading 'hex:' string to raw
+	// bytes.
+	if strings.HasPrefix(key, HEX_PREFIX) {
+		keyBytes, err = hex.DecodeString(strings.ReplaceAll(key, HEX_PREFIX, ""))
+		if err != nil {
+			return nil, errors.Wrap(err, "The secret key is not in a valid hex format")
+		}
+	} else {
+		keyBytes = []byte(key)
 	}
 
-	// The tss library uses TP2B_AUTH structure for passwords (basically a length and
+	// The tss library uses TP2B_AUTH structure for passwords (containing a length and
 	// fixed length buffer).  The tpmprovider uses zero-copy to pass the passwords
-	// into the C code.  If the password wasn't provided, return an array that contains
-	// a single zero.  When passed to the C code, the TPM2B_AUTH will be an empty
-	// password.
-	if keyBytes == nil || len(keyBytes) == 0 {
+	// into underlying C code.  If the password wasn't provided, return an array that contains
+	// a single zero (to avoid a null pointer).  When passed to the C code, the TPM2B_AUTH
+	// will still be an empty password.
+	if len(keyBytes) == 0 {
 		keyBytes = []byte{0}
 	}
 

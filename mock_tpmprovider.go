@@ -78,8 +78,8 @@ func (mockedTpm MockedTpmProvider) NvIndexExists(nvIndex uint32) (bool, error) {
 	return args.Bool(0), args.Error(1)
 }
 
-func (mockedTpm MockedTpmProvider) NvDefine(ownerSecretKey string, tagSecretKey string, nvIndex uint32, indexSize uint16) error {
-	args := mockedTpm.Called(ownerSecretKey, tagSecretKey, nvIndex, indexSize)
+func (mockedTpm MockedTpmProvider) NvDefine(ownerSecretKey string, indexSecretKey string, nvIndex uint32, indexSize uint16) error {
+	args := mockedTpm.Called(ownerSecretKey, indexSecretKey, nvIndex, indexSize)
 	return args.Error(0)
 }
 
@@ -88,13 +88,13 @@ func (mockedTpm MockedTpmProvider) NvRelease(ownerSecretKey string, nvIndex uint
 	return args.Error(0)
 }
 
-func (mockedTpm MockedTpmProvider) NvRead(tagSecretKey string, authHandle uint32, nvIndex uint32) ([]byte, error) {
-	args := mockedTpm.Called(tagSecretKey, authHandle, nvIndex)
+func (mockedTpm MockedTpmProvider) NvRead(indexSecretKey string, authHandle uint32, nvIndex uint32) ([]byte, error) {
+	args := mockedTpm.Called(indexSecretKey, authHandle, nvIndex)
 	return args.Get(0).([]byte), args.Error(1)
 }
 
-func (mockedTpm MockedTpmProvider) NvWrite(tagSecretKey string, authHandle uint32, nvIndex uint32, data []byte) error {
-	args := mockedTpm.Called(tagSecretKey, authHandle, nvIndex, data)
+func (mockedTpm MockedTpmProvider) NvWrite(indexSecretKey string, authHandle uint32, nvIndex uint32, data []byte) error {
+	args := mockedTpm.Called(indexSecretKey, authHandle, nvIndex, data)
 	return args.Error(0)
 }
 

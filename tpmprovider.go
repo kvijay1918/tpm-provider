@@ -42,6 +42,10 @@ const (
 	TPM_PROVIDER_EK_PUBLIC_MISMATCH   = C.TPM_PROVIDER_EK_PUBLIC_MISMATCH
 	TPM_PROVIDER_INVALID_PCRSELECTION = C.TPM_PROVIDER_INVALID_PCRSELECTION
 	TPM_PROVIDER_INVALID_PCRCOUNT     = C.TPM_PROVIDER_INVALID_PCRCOUNT
+
+	// used to indicate that a TPM secret password is passed in hex
+	// format:  ex. 'hex:decafbad'.
+	HEX_PREFIX = "hex:"
 )
 
 type TpmProvider interface {
@@ -108,7 +112,7 @@ type TpmProvider interface {
 	// Allocate nvram of size 'indexSize' at 'nvIndex'.  Creates the index using the
 	// TPM2_RH_OWNER handle.
 	//
-	NvDefine(ownerSecretKey string, tagSecretKey string, nvIndex uint32, nvSize uint16) error
+	NvDefine(ownerSecretKey string, indexSecretKey string, nvIndex uint32, nvSize uint16) error
 
 	//
 	// Deletes data at nvram index 'nvIndex'

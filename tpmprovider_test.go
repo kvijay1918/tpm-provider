@@ -17,15 +17,16 @@ import (
 )
 
 //
-// These unit tests can be run from the root of the project using...
-//   env CGO_CFLAGS_ALLOW="-f.*" go test ./...
+// These unit tests can be run from the root of the project by running...
+//
+// env CGO_CFLAGS_ALLOW="-f.*" go test -tags=unit_test -v ./...
 //
 
 const (
-	OwnerSecretKey     = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
-	TagSecretKey       = "beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"
-	BadSecretKey       = "b000b000b000b000b000b000b000b000b000b000"
-	CertifiedKeySecret = "feedfeedfeedfeedfeedfeedfeedfeedfeedfeed"
+	OwnerSecretKey     = "hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+	TagSecretKey       = "hex:beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"
+	BadSecretKey       = "hex:b000b000b000b000b000b000b000b000b000b000"
+	CertifiedKeySecret = "hex:feedfeedfeedfeedfeedfeedfeedfeedfeedfeed"
 )
 
 // Provisiones a new instance of the TPM simulator with an owner secret or EK Certificate.
@@ -130,6 +131,18 @@ func TestTakeOwnershipWithEmptySecretKey(t *testing.T) {
 	defer tpmProvider.Close()
 
 	err := tpmProvider.TakeOwnership("")
+	if err != nil {
+		assert.FailNowf(t, "", "%s", err)
+	}
+}
+
+func TestTakeOwnershipWithSimpleSecretKey(t *testing.T) {
+
+	tpmSimulator, tpmProvider := newSimulatorAndProvider(t)
+	defer tpmSimulator.Stop()
+	defer tpmProvider.Close()
+
+	err := tpmProvider.TakeOwnership("mypassword")
 	if err != nil {
 		assert.FailNowf(t, "", "%s", err)
 	}
