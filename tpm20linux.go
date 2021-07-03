@@ -658,25 +658,44 @@ func validateAndConvertKey(key string) ([]byte, error) {
 	var keyBytes []byte
 	var err error
 
-	// tpm2-tools supports the use of 'hex' passwords.  Follow suit
-	// and convert passwords with a leading 'hex:' string to raw
-	// bytes.
-	if strings.HasPrefix(key, HEX_PREFIX) {
-		keyBytes, err = hex.DecodeString(strings.ReplaceAll(key, HEX_PREFIX, ""))
+	// See if the key is a 'legacy' trust-agent password (40 characters
+	// in hex format).  If so, convert it to bytes.  This is needed for
+	// backward comapatablity and carrying forward existing secrets during
+	// an upgrade.
+	//
+	// Otherwise, use what was provided, including the definition of 'hex:'
+	// passwords.
+	if len(key) == 40 {
+		keyBytes, err = hex.DecodeString(key)
 		if err != nil {
-			return nil, errors.Wrap(err, "The secret key is not in a valid hex format")
+			// not a legacy secret
+			keyBytes = nil
 		}
-	} else {
-		keyBytes = []byte(key)
+	}
+
+	if keyBytes == nil {
+		// tpm2-tools supports the use of 'hex' passwords.  Follow suit
+		// and convert passwords with a leading 'hex:' string to raw
+		// bytes.
+		if strings.HasPrefix(key, HEX_PREFIX) {
+			keyBytes, err = hex.DecodeString(strings.ReplaceAll(key, HEX_PREFIX, ""))
+			if err != nil {
+				return nil, errors.Wrap(err, "'hex:' was provided by could not be parsed")
+			}
+		} else {
+			keyBytes = []byte(key)
+		}
 	}
 
 	// The tss library uses TP2B_AUTH structure for passwords (containing a length and
-	// fixed length buffer).  The tpmprovider uses zero-copy to pass the passwords
+	// fixed length buffer).  The tpm-provider uses zero-copy to pass the passwords
 	// into underlying C code.  If the password wasn't provided, return an array that contains
 	// a single zero (to avoid a null pointer).  When passed to the C code, the TPM2B_AUTH
-	// will still be an empty password.
+	// will still be an empty password (null terminated).
 	if len(keyBytes) == 0 {
 		keyBytes = []byte{0}
+	} else if len(keyBytes) > 64 {
+		return nil, errors.New("The secret cannot exceed 64 bytes in length")
 	}
 
 	return keyBytes, nil

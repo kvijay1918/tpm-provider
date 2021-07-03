@@ -7,6 +7,7 @@ package tpmprovider
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"sync"
@@ -23,10 +24,12 @@ import (
 //
 
 const (
-	OwnerSecretKey     = "hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
-	TagSecretKey       = "hex:beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"
-	BadSecretKey       = "hex:b000b000b000b000b000b000b000b000b000b000"
-	CertifiedKeySecret = "hex:feedfeedfeedfeedfeedfeedfeedfeedfeedfeed"
+	OwnerSecretKey     = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+	TagSecretKey       = "beefbeefbeefbeefbeefbeefbeefbeefbeefbeef"
+	BadSecretKey       = "b000b000b000b000b000b000b000b000b000b000"
+	HexSecretKey       = "hex:deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+	CertifiedKeySecret = "feedfeedfeedfeedfeedfeedfeedfeedfeedfeed"
+	SimpleSecretKey    = "mypassword"
 )
 
 // Provisiones a new instance of the TPM simulator with an owner secret or EK Certificate.
@@ -177,6 +180,74 @@ func TestIsOwnedWithAuthPositive(t *testing.T) {
 	}
 
 	assert.True(t, owned)
+}
+
+func TestIsOwnedWithHexPositive(t *testing.T) {
+
+	tpmSimulator, tpmProvider := newSimulatorAndProvider(t)
+	defer tpmSimulator.Stop()
+	defer tpmProvider.Close()
+
+	err := tpmProvider.TakeOwnership(HexSecretKey)
+	if err != nil {
+		assert.FailNowf(t, "", "%s", err)
+	}
+
+	owned, err := tpmProvider.IsOwnedWithAuth(HexSecretKey)
+	if err != nil {
+		assert.FailNowf(t, "", "%s", err)
+	}
+
+	assert.True(t, owned)
+}
+
+func TestIsOwnedWithHexCompatablity(t *testing.T) {
+
+	tpmSimulator, tpmProvider := newSimulatorAndProvider(t)
+	defer tpmSimulator.Stop()
+	defer tpmProvider.Close()
+
+	err := tpmProvider.TakeOwnership(HexSecretKey)
+	if err != nil {
+		assert.FailNowf(t, "", "%s", err)
+	}
+
+	owned, err := tpmProvider.IsOwnedWithAuth(OwnerSecretKey)
+	if err != nil {
+		assert.FailNowf(t, "", "%s", err)
+	}
+
+	assert.True(t, owned)
+}
+
+func TestSecretValidation(t *testing.T) {
+
+	var keyBytes []byte
+	var err error
+
+	h, _ := hex.DecodeString(OwnerSecretKey)
+
+	keyBytes, err = validateAndConvertKey(OwnerSecretKey)
+	if err != nil {
+		assert.FailNowf(t, "", "%s", err)
+	}
+
+	assert.Equal(t, keyBytes, h)
+
+	keyBytes, err = validateAndConvertKey(HexSecretKey)
+	if err != nil {
+		assert.FailNowf(t, "", "%s", err)
+	}
+
+	assert.Equal(t, keyBytes, h)
+
+	keyBytes, err = validateAndConvertKey(SimpleSecretKey)
+	if err != nil {
+		assert.FailNowf(t, "", "%s", err)
+	}
+
+	assert.Equal(t, keyBytes, []byte(SimpleSecretKey))
+
 }
 
 func TestIsOwnedWithAuthNegative(t *testing.T) {
