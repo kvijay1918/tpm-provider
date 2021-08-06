@@ -19,7 +19,7 @@ package tpmprovider
 //-------------------------------------------------------------------------------------------------
 
 // #cgo windows LDFLAGS: -L out -ltss2-sys -ltss2-mu -ltss2-tcti-tbs
-// #cgo windows CFLAGS: -I../tpm2-tss/include
+// #cgo windows CFLAGS: -Ic:/tpm2-tss/include
 // #cgo linux CFLAGS: -fno-strict-overflow -fno-delete-null-pointer-checks -fwrapv -fstack-protector-strong
 // #cgo linux LDFLAGS: -ltss2-sys -ltss2-tcti-tabrmd -ltss2-mu -lssl -lcrypto -ltss2-tcti-device
 // #include "tpm.h"
