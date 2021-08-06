@@ -17,6 +17,10 @@
 #include <tss2/tss2_tcti_device.h>
 #include <tss2/tss2_tcti_mssim.h>
 
+#if defined(WIN32)
+#include <tss2/tss2_tcti_tbs.h>
+#endif
+
 #include "tpm.h"
 
 #define TRUE 1

@@ -17,8 +17,10 @@ typedef enum TPM_VERSION
 
 typedef enum TCTI_TYPE
 {
+    TCTI_UNKNOWN = 0,
+    TCTI_ABRMD,
     TCTI_DEVICE,
-    TCTI_MSSIM,
+    TCTI_TBS
 } TCTI_TYPE;
 
 typedef enum NV_IDX 

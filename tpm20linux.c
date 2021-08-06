@@ -12,7 +12,7 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
     TSS2_ABI_VERSION abiVersion = {0};
     const char* tss2Conf = conf;
 
-    if (tctiType != TCTI_DEVICE && tctiType != TCTI_MSSIM)
+    if (tctiType != TCTI_DEVICE && tctiType != TCTI_MSSIM && tctiType != TCTI_TBS)
     {
         ERROR("Incorrect tcti type: %d\n", tctiType);
         return NULL;
@@ -27,6 +27,9 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
 
     ctx->version = TPM_VERSION_20;
 
+#if defined(WIN32)
+    rc = Tss2_Tcti_Tbs_Init(NULL, &size, NULL);
+#else
     if (tctiType == TCTI_DEVICE) 
     {
         rc = Tss2_Tcti_Device_Init (NULL, &size, NULL);
@@ -35,6 +38,7 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
     {
         Tss2_Tcti_Mssim_Init(NULL, &size, NULL);
     }
+#endif    
     
     if (rc != TPM2_RC_SUCCESS) 
     {
@@ -45,6 +49,9 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
 
     ctx->tcti = (TSS2_TCTI_CONTEXT*)calloc(1, size);
 
+#if defined(WIN32)
+    rc = Tss2_Tcti_Tbs_Init(ctx->tcti, &size, NULL);
+#else
     if (tctiType == TCTI_DEVICE) 
     {
         rc = Tss2_Tcti_Device_Init(ctx->tcti, &size, tss2Conf);
@@ -53,6 +60,7 @@ tpmCtx* TpmCreate(unsigned int tctiType, const char* conf)
     {
         Tss2_Tcti_Mssim_Init(ctx->tcti, &size, tss2Conf);
     }
+#endif
 
     if (rc != TPM2_RC_SUCCESS) 
     {
